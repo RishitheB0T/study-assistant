@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "properties": {
+    "title": { "type": "string", "description": "Short title for the study set" },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["flashcard"] },
+              "id": { "type": "string" },
+              "front": { "type": "string" },
+              "back": { "type": "string" }
+            },
+            "required": ["type", "id", "front", "back"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["mcq"] },
+              "id": { "type": "string" },
+              "question": { "type": "string" },
+              "options": {
+                "type": "array",
+                "items": { "type": "string" },
+                "minItems": 4,
+                "maxItems": 4
+              },
+              "answerIndex": { "type": "integer", "minimum": 0, "maximum": 3 },
+              "explanation": { "type": "string" }
+            },
+            "required": ["type", "id", "question", "options", "answerIndex", "explanation"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "required": ["title", "items"],
+  "additionalProperties": false
+}
