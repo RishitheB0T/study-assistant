@@ -14,15 +14,24 @@ function Quiz({ questions }) {
   const isCorrect = quiz.chosen === question.answerIndex
   const rightOption = question.options[question.answerIndex]
 
+  function optionClass(i) {
+    if (!isAnswered) return ''
+    if (i === question.answerIndex) return 'correct'
+    if (i === quiz.chosen) return 'wrong'
+    return ''
+  }
+
   return (
     <section>
       <p>Question {quiz.position} of {quiz.total}</p>
       <h3>{question.question}</h3>
-      {question.options.map((option, i) => (
-        <button key={i} type="button" disabled={isAnswered} onClick={() => quiz.answer(i)}>
-          {option}
-        </button>
-      ))}
+      <div className="options">
+        {question.options.map((option, i) => (
+          <button key={i} type="button" disabled={isAnswered} onClick={() => quiz.answer(i)} className={optionClass(i)}>
+            {option}
+          </button>
+        ))}
+      </div>
       {isAnswered ? (
         <div>
           <p>{isCorrect ? 'Correct!' : 'Not quite. The answer is: ' + rightOption}</p>
