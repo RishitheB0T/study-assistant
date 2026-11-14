@@ -1,0 +1,19 @@
+# Dependencies: npm downloads them again from package.json
+node_modules/
+
+# Build output: Vite recreates it with "npm run build"
+dist/
+
+# Secrets: the real API key lives here and must never reach GitHub
+.env
+.env.*
+!.env.example
+
+# Assistant files stay on this machine only
+CLAUDE.md
+.claude/
+
+# Logs and operating-system clutter
+*.log
+.DS_Store
+Thumbs.db
