@@ -1,11 +1,12 @@
 import { useQuiz } from '../hooks/useQuiz.js'
+import Results from './Results.jsx'
 
 // One multiple-choice question at a time, with feedback after each answer.
 function Quiz({ questions }) {
   const quiz = useQuiz(questions)
 
   if (quiz.isFinished) {
-    return <p>You scored {quiz.score} / {quiz.total}.</p>
+    return <Results score={quiz.score} total={quiz.total} onRetest={quiz.retestWrong} />
   }
 
   const question = quiz.current
