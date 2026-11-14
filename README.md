@@ -73,14 +73,11 @@ package-lock.json   Exact version of every installed package
 
 ## How this was built (AI usage)
 
-I chose the idea and the tech stack, worked out the build plan with an AI
-assistant's help, and directed every step. The code was written by the AI
-assistant, one small piece at a time, to my instructions. For each piece I
-decided what it should do, reviewed it block by block, tested it in the
-browser, and pushed back where I wanted something different. For example, I
-caught that the text box passed along text the app then ignored, and I
-reorganised the page so a set's title and cards appear together only once a
-set exists. I make sure I can explain, debug and extend every part of it.
+I built this project together with an AI coding assistant. I chose the idea
+and the tech stack, planned the build with the assistant's help, and directed
+every step. We code along, with me writing parts of each piece
+and the assistant writing and reviewing the rest. I review and test everything,
+and make sure I can explain, debug and extend all of it.
 
 ## Time spent
 
