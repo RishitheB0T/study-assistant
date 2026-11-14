@@ -45,7 +45,7 @@ index.html          The one HTML page; React draws the app inside <div id="root"
 vite.config.js      Vite settings: turns on the React plugin
 src/main.jsx        Starting point: hands the root element to React
 src/App.jsx         The top-level component
-docs/               Learning log, tool notes and AI-usage record
+docs/               Learning log and tool notes
 package.json        Project name, scripts and dependencies
 package-lock.json   Exact version of every installed package
 .gitignore          Files Git must never track
@@ -55,5 +55,4 @@ package-lock.json   Exact version of every installed package
 
 This project is built with an AI coding assistant (Claude, by Anthropic). The
 AI writes the code and makes the commits under my direction. I review every
-block and make sure I can explain, fix and extend it myself. The step-by-step
-record is in [docs/AI_USAGE.md](docs/AI_USAGE.md).
+block and make sure I can explain, fix and extend it myself.
