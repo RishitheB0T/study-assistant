@@ -84,5 +84,5 @@ set exists. I make sure I can explain, debug and extend every part of it.
 
 ## Time spent
 
-About 4 hours so far: roughly 1.3 hours on setup and 2.6 hours on the study
-screens with sample data (still in progress).
+About 1.5 hours so far, covering setup and the study screens with sample data
+(still in progress).

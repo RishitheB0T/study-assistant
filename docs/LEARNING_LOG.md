@@ -2,7 +2,7 @@
 
 One entry per finished step. Written for revising before the interview.
 
-## Step 1.0 — Set up   (2026-11-15, about 1.3 hours)
+## Step 1.0 — Set up   (2026-11-15; steps 1.0 and 1.1 together took about 1.5 hours)
 
 **What we built:** an empty React app that shows the heading "Study
 Assistant", served by Vite, in a public GitHub repo. Files: `.gitignore`,
