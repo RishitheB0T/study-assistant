@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Flashcard from './components/Flashcard.jsx'
+import Quiz from './components/Quiz.jsx'
 import TopicForm from './components/TopicForm.jsx'
 import { sampleSet } from './lib/sampleSet.js'
 
@@ -15,6 +16,8 @@ function App() {
 
   const flashcards =
     studySet === null ? [] : studySet.items.filter((item) => item.type === 'flashcard')
+  const questions =
+    studySet === null ? [] : studySet.items.filter((item) => item.type === 'mcq')
 
   return (
     <main>
@@ -28,6 +31,7 @@ function App() {
           {flashcards.map((card) => (
             <Flashcard key={card.id} card={card} />
           ))}
+          <Quiz questions={questions} />
         </>
       )}
     </main>
