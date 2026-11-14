@@ -9,10 +9,6 @@ dist/
 .env.*
 !.env.example
 
-# Assistant files stay on this machine only
-CLAUDE.md
-.claude/
-
 # Logs and operating-system clutter
 *.log
 .DS_Store

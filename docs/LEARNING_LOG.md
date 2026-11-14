@@ -34,7 +34,7 @@ Assistant", served by Vite, in a public GitHub repo. Files: `.gitignore`,
 **Why we did it this way, and what the alternative was:**
 
 - Files written by hand instead of `npm create vite`. The generator offers to
-  delete existing files (which would have removed `CLAUDE.md`) and adds about
+  delete the files already in the folder, and it adds about
   10 extra files that I would have had to learn or delete.
 - Folders are created only when their first file arrives, because Git cannot
   store empty folders. The alternative is placeholder `.gitkeep` files.

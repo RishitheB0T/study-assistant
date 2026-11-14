@@ -13,7 +13,7 @@ questions, never raw model text.
 ## Done so far
 
 - Git repository with a `.gitignore` that keeps dependencies, build output,
-  secrets (`.env` files) and local editor-assistant files out of version control.
+  secrets (`.env` files) and local-only files out of version control.
 - `package.json` with React and Vite installed.
 - Vite dev server with the React plugin, and a first React component that
   renders the app title.
@@ -50,9 +50,3 @@ package.json        Project name, scripts and dependencies
 package-lock.json   Exact version of every installed package
 .gitignore          Files Git must never track
 ```
-
-## AI usage
-
-This project is built with an AI coding assistant (Claude, by Anthropic). The
-AI writes the code and makes the commits under my direction. I review every
-block and make sure I can explain, fix and extend it myself.
