@@ -22,11 +22,13 @@ function App() {
       {studySet === null ? (
         <p>Paste your notes above and press Generate to get flashcards and a quiz.</p>
       ) : (
-        <h2>{studySet.title}</h2>
+        <>
+          <h2>{studySet.title}</h2>
+          {flashcards.map((card) => (
+            <Flashcard key={card.id} card={card} />
+          ))}
+        </>
       )}
-      {flashcards.map((card) => (
-        <Flashcard key={card.id} card={card} />
-      ))}
     </main>
   )
 }
