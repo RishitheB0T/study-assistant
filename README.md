@@ -7,8 +7,9 @@ text). Before anything reaches the screen, the app checks that data against a
 fixed set of rules. The user only ever sees clean, interactive cards and
 questions, never raw model text.
 
-> **Status:** the study screens work with built-in sample data. The AI model
-> is not connected yet.
+> **Status:** the study screens work with built-in sample data, and the API
+> server that calls Gemini is ready. Connecting the screens to the server is
+> the next step.
 
 ## Done so far
 
@@ -26,39 +27,85 @@ questions, never raw model text.
 - Quiz logic kept in one reducer (`useReducer`), so all the rules live in one
   plain function.
 - Plain CSS, mobile first: one readable column that fits a phone screen.
+- Spring Boot API server with one endpoint, `POST /api/generate`. It keeps the
+  Gemini API key on the server, rejects empty or too-long notes before calling
+  the model, gives up after 20 seconds, and always replies in one of two JSON
+  shapes (see below).
 
 ## Tech stack
 
 - **React 19**: builds the user interface from function components and hooks.
-- **Vite 8**: development server with instant reload, and build tool.
-- **@vitejs/plugin-react**: lets Vite understand JSX (HTML-like tags in JavaScript).
+- **Vite 8**: development server with instant reload, and build tool. It also
+  forwards `/api` requests to the Spring Boot server during development.
+- **Spring Boot 4 (Java 21)**: the API server. It calls the Gemini REST API with
+  Spring's `RestClient`, with no AI SDK.
+- **Gemini API** (`gemini-3.5-flash-lite`): the model, asked for JSON that
+  follows a fixed schema.
+- **concurrently**: lets `npm start` run the web app and the server together.
 
 ## Getting started
 
-Requires **Node.js 20.19 or newer** (Vite 8 needs it).
+Requires **Node.js 20.19 or newer** and **a JDK, version 17 or newer** (21
+recommended). Maven is not needed: the project includes the Maven wrapper.
+
+1. Get a free Gemini API key at https://aistudio.google.com/apikey.
+2. Copy `.env.example` to `.env` and paste the key after `GEMINI_API_KEY=`.
+   `.env` is git-ignored and is read only by the server.
+3. Install and start:
 
 ```bash
 git clone https://github.com/RishitheB0T/study-assistant.git
 cd study-assistant
 npm install
-npm run dev
+npm start
 ```
 
-Then open http://localhost:5173. Edits to files in `src/` show up in the page
-within about a second, without a manual refresh.
+Then open http://localhost:5173. The very first start takes a minute or two
+while the Maven wrapper downloads Maven and the server's dependencies.
+
+`npm start` runs both parts. To run them separately: `npm run dev` (web app on
+port 5173) and `npm run server` (API on port 8787).
+
+## The API
+
+`POST /api/generate` with the body `{ "notes": "..." }` always replies with one
+of two shapes:
+
+```json
+{ "ok": true, "text": "...the model's raw JSON answer..." }
+{ "ok": false, "error": { "code": "TIMEOUT", "message": "..." } }
+```
+
+| Code | HTTP status | When |
+| --- | --- | --- |
+| `BAD_INPUT` | 400 | Notes are empty or longer than 4,000 characters, or the body is not JSON |
+| `NO_KEY` | 500 | The server has no `GEMINI_API_KEY` |
+| `TIMEOUT` | 504 | Gemini took longer than 20 seconds |
+| `RATE_LIMITED` | 429 | Gemini's rate limit was hit (a `Retry-After` header is passed on when Gemini sends one) |
+| `PROVIDER_ERROR` | 502 | Gemini rejected the request, blocked the input, or failed |
+
+The server never checks the model's answer itself. The web app checks it before
+anything is shown.
 
 ## Project files
 
 ```
 index.html          The one HTML page; React draws the app inside <div id="root">
-vite.config.js      Vite settings: turns on the React plugin
+vite.config.js      Vite settings: the React plugin, and /api forwarded to the server
 src/main.jsx        Starting point: hands the root element to React
 src/index.css       Styles for the whole app
 src/App.jsx         The top-level component: holds the current study set
 src/components/     TopicForm, Flashcard, Quiz, Results
 src/hooks/          useQuiz: the quiz rules (reducer) and the values the screen needs
 src/lib/            sampleSet: hand-written study data in the shape the AI must return
+server/             Spring Boot API server (Maven project)
+  GenerateController     POST /api/generate; @Valid rejects bad input
+  GeminiClient           the only class that reads the key and calls Gemini
+  ApiExceptionHandler    turns every failure into { ok: false, error }
+  study-set-schema.json  the JSON schema Gemini's answer must follow
+scripts/            start-server.js: starts the server with the Maven wrapper on any OS
 docs/               Learning log and tool notes
+.env.example        Template for .env (the API key)
 package.json        Project name, scripts and dependencies
 package-lock.json   Exact version of every installed package
 .gitignore          Files Git must never track
@@ -66,8 +113,9 @@ package-lock.json   Exact version of every installed package
 
 ## Known limitations
 
-- The AI model is not connected yet. Every topic returns the same built-in
-  sample set (Photosynthesis).
+- The screens are not connected to the server yet. Every topic still returns
+  the same built-in sample set (Photosynthesis).
+- Running the app needs a JDK as well as Node.js.
 - Basic styling only: no dark mode, and the phone layout has not been tested
   on real devices yet.
 - After answering a quiz question, keyboard focus is not moved to the Next
