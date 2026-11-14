@@ -71,6 +71,17 @@ package-lock.json   Exact version of every installed package
 - Nothing is saved: refreshing the page clears the set and the quiz progress.
 - No favicon, so the browser logs a harmless 404 for `/favicon.ico`.
 
+## How this was built (AI usage)
+
+I chose the idea and the tech stack, worked out the build plan with an AI
+assistant's help, and directed every step. The code was written by the AI
+assistant, one small piece at a time, to my instructions. For each piece I
+decided what it should do, reviewed it block by block, tested it in the
+browser, and pushed back where I wanted something different. For example, I
+caught that the text box passed along text the app then ignored, and I
+reorganised the page so a set's title and cards appear together only once a
+set exists. I make sure I can explain, debug and extend every part of it.
+
 ## Time spent
 
 About 4 hours so far: roughly 1.3 hours on setup and 2.6 hours on the study
