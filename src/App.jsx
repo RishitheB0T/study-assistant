@@ -7,8 +7,9 @@ function App() {
   // null means "nothing generated yet", which is the empty state.
   const [studySet, setStudySet] = useState(null)
 
-  // Fake for now: every topic gives the sample set. Step 1.4 calls the AI here.
-  function handleGenerate() {
+  // Fake for now: `text` is not used yet and every topic gives the sample set.
+  // Step 1.4 sends `text` to the AI here.
+  function handleGenerate(text) {
     setStudySet(sampleSet)
   }
 
