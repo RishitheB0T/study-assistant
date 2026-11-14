@@ -19,10 +19,13 @@ questions, never raw model text.
   counter. Generate stays disabled while the box is empty or too long.
 - Empty state before anything is generated.
 - Flashcards that flip between question and answer on click (or Enter/Space).
-- Multiple-choice quiz, one question at a time: answers lock once picked,
-  feedback and an explanation follow, and the score is shown at the end.
+- Multiple-choice quiz, one question at a time: answers lock once picked, the
+  right option turns green and a wrong pick red, and an explanation follows.
+- Results screen with the score, and a button to re-test only the questions
+  answered wrong.
 - Quiz logic kept in one reducer (`useReducer`), so all the rules live in one
   plain function.
+- Plain CSS, mobile first: one readable column that fits a phone screen.
 
 ## Tech stack
 
@@ -50,8 +53,9 @@ within about a second, without a manual refresh.
 index.html          The one HTML page; React draws the app inside <div id="root">
 vite.config.js      Vite settings: turns on the React plugin
 src/main.jsx        Starting point: hands the root element to React
+src/index.css       Styles for the whole app
 src/App.jsx         The top-level component: holds the current study set
-src/components/     TopicForm, Flashcard, Quiz
+src/components/     TopicForm, Flashcard, Quiz, Results
 src/hooks/          useQuiz: the quiz rules (reducer) and the values the screen needs
 src/lib/            sampleSet: hand-written study data in the shape the AI must return
 docs/               Learning log and tool notes
@@ -64,8 +68,8 @@ package-lock.json   Exact version of every installed package
 
 - The AI model is not connected yet. Every topic returns the same built-in
   sample set (Photosynthesis).
-- No styling yet: the page uses browser defaults and is not laid out for
-  phones.
+- Basic styling only: no dark mode, and the phone layout has not been tested
+  on real devices yet.
 - After answering a quiz question, keyboard focus is not moved to the Next
   button.
 - Nothing is saved: refreshing the page clears the set and the quiz progress.

@@ -62,3 +62,40 @@ for every change, such as a card flipping or a quiz answer being marked.
 **Interview answer:** "React lets me describe the UI as a function of state.
 When the state changes, React works out what changed on the page and updates
 only that part."
+
+## useState (React hook)
+
+**What it is:** a hook that gives a component one remembered value and a
+function to change it.
+
+**Problem it solves:** a component function runs again on every redraw, so a
+normal variable would reset each time, and changing it would not update the
+screen.
+
+**How we use it here:** `isFlipped` in `Flashcard`, `text` in `TopicForm`, and
+`studySet` in `App`.
+
+**Without it we would:** keep values outside React and update the page by hand
+whenever they change.
+
+**Interview answer:** "useState gives me a value React remembers between
+renders, plus a setter. Calling the setter stores the new value and makes React
+render the component again."
+
+## useReducer (React hook)
+
+**What it is:** a hook that keeps one state object and changes it only through
+a reducer function: `(old state, action) => new state`.
+
+**Problem it solves:** when several values change together under rules, separate
+`useState`s scatter those rules across click handlers.
+
+**How we use it here:** `useQuiz` keeps `{ questions, index, answers }`, and
+`quizReducer` handles `answer`, `next` and `retestWrong`.
+
+**Without it we would:** use three `useState`s and repeat the rules (no changing
+an answer, no skipping) inside each button's click handler.
+
+**Interview answer:** "All quiz changes go through one pure function, so the
+rules live in one place and I can test them without rendering anything. The
+screen just dispatches actions like 'answer' or 'next'."
