@@ -229,3 +229,53 @@ repeated-id test.
   so it fails only for the reason in its name.
 
 **Still shaky:** —
+
+## Step 1.4 — Request lifecycle   (2026-11-15)
+
+**What we built:** the screens now really call the server. `api.js` (the only
+`fetch`), `useStudySet` (status word, checkpoint, stale guard, cancel, retry),
+`StatusView` (loading, "Still working…" after 5 s, error with Retry, skipped
+note), and the wiring in `App`. I wrote the error branch of `StatusView`.
+Tested end to end: a real Gemini set, a timeout then Retry, garbled text, a
+skipped item, a set with no questions, a slow answer with Cancel, and the race
+where an old answer arrives last.
+
+**Ideas I learned (plain words, then the proper name):**
+
+- A value that arrives later, and waiting for it without freezing the page:
+  a promise, `async` / `await`.
+- `fetch` only throws when no reply arrives; a 504 is still a reply.
+- Cancelling a running request: `AbortController` and `signal`.
+- An old, slow answer replacing a newer one: a stale response (a race). The
+  fix: number every request and accept only the newest.
+- Remembered but never shown, and always read fresh: `useRef`.
+- Code after drawing, with a cleanup: `useEffect` (the 5-second timer).
+- A new `key` makes React rebuild a part from scratch: the section holding the
+  set gets `key={receivedCount}`, so cards and quiz start fresh.
+- Screen reader announcements: `role="status"` (polite) and `role="alert"`
+  (immediate).
+
+**Why we did it this way, and what the alternative was:**
+
+- One status word instead of `isLoading` + `isError`, so the state can never
+  contradict itself.
+- Abort plus a request number: abort saves work, the number is the real guard
+  (I saw "Plants" replace "Volcanoes" when the guard was switched off).
+- The timer lives in a component that exists only while loading, instead of
+  extra state in the hook.
+- Generate is disabled while loading; the user cancels first. The guard still
+  protects against an answer that was already arriving.
+
+**Interview questions and my answers:**
+
+- *How do you stop an old answer from overwriting a newer one?* Each request
+  gets a number from a ref; after `await`, if my number is not the newest, I
+  return without touching state.
+- *Why is the request number a ref and not state?* It is never shown, and after
+  `await` a state value inside the function would still be the old one.
+- *What does the user see if the server is down?* "Can't reach the server…"
+  with a Retry button: `fetch` throws, and `api.js` turns that into `NETWORK`.
+- *What happens to the timer if the answer arrives after 2 seconds?* `Loading`
+  disappears and its effect cleanup clears the timer.
+
+**Still shaky:** —

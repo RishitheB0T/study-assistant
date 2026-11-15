@@ -7,10 +7,9 @@ text). Before anything reaches the screen, the app checks that data against a
 fixed set of rules. The user only ever sees clean, interactive cards and
 questions, never raw model text.
 
-> **Status:** the study screens work with built-in sample data, the API server
-> that calls Gemini is ready, and the checkpoint that validates the model's
-> answer is built and tested. Connecting the screens to the server is the next
-> step.
+> **Status:** the app works end to end: notes go to the server, Gemini answers,
+> the checkpoint validates the answer, and the cards and quiz appear. Loading,
+> error, empty, slow and cancelled requests are all handled.
 
 ## Done so far
 
@@ -37,6 +36,12 @@ questions, never raw model text.
   clean set, or a reason: `empty`, `malformed` (not JSON) or `wrong_shape`. Bad
   items and repeated ids are skipped and counted, so one broken card does not
   throw away a good set. Covered by 10 automatic tests.
+- Request lifecycle (`useStudySet`): one status word (`idle`, `loading`,
+  `success`, `error`), "Still working…" after 5 seconds, Cancel, Retry, and a
+  clear message for every failure (server down, timeout, rate limit, garbled
+  or empty answer). Every request is numbered, so an older, slower answer can
+  never replace a newer one. Generate waits while a request is running, and a
+  new set always starts with fresh cards and a fresh quiz.
 
 ## Tech stack
 
@@ -105,9 +110,11 @@ vite.config.js      Vite settings: the React plugin, and /api forwarded to the s
 src/main.jsx        Starting point: hands the root element to React
 src/index.css       Styles for the whole app
 src/App.jsx         The top-level component: holds the current study set
-src/components/     TopicForm, Flashcard, Quiz, Results
-src/hooks/          useQuiz: the quiz rules (reducer) and the values the screen needs
-src/lib/            parseStudySet: the checkpoint (+ parseStudySet.test.js)
+src/components/     TopicForm, Flashcard, Quiz, Results, StatusView (loading / error / skipped)
+src/hooks/          useStudySet: one request at a time (status, cancel, retry, stale guard)
+                    useQuiz: the quiz rules (reducer) and the values the screen needs
+src/lib/            api.js: the only fetch call; always returns the server's ok/error shape
+                    parseStudySet: the checkpoint (+ parseStudySet.test.js)
                     schema: the Zod rules for each item type and the set
                     sampleSet: hand-written study data in the shape the AI must return
 server/             Spring Boot API server (Maven project), package com.studyassistant.server
@@ -128,9 +135,9 @@ package-lock.json   Exact version of every installed package
 
 ## Known limitations
 
-- The screens are not connected to the server yet. Every topic still returns
-  the same built-in sample set (Photosynthesis).
 - Running the app needs a JDK as well as Node.js.
+- When Gemini is briefly overloaded (HTTP 503), the user sees an error and has
+  to press Retry; there is no automatic retry yet.
 - Basic styling only: no dark mode, and the phone layout has not been tested
   on real devices yet.
 - After answering a quiz question, keyboard focus is not moved to the Next

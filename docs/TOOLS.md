@@ -203,3 +203,82 @@ miss regressions.
 `@Test` method, and `expect(...).toEqual(...)` is `assertEquals`. Each bad
 item in my tests breaks exactly one rule, so a test can only pass for the
 reason in its name."
+
+## fetch (with async / await)
+
+**What it is:** the browser's built-in function for HTTP requests. It returns a
+promise (an answer that arrives later), and `await` waits for it without
+freezing the page.
+
+**Problem it solves:** the page must talk to the server without locking up
+while it waits 1 to 20 seconds.
+
+**How we use it here:** only in `src/lib/api.js`. `requestStudySet(notes,
+signal)` posts `{ notes }` to `/api/generate` and always returns
+`{ ok, ... }`. A 4xx/5xx still returns a body, so `fetch` only throws when no
+reply arrives at all (server down) or the request is cancelled.
+
+**Without it we would:** add a library such as axios, which mainly adds
+automatic JSON parsing and throwing on 4xx/5xx; we need neither.
+
+**Interview answer:** "All network code is in one function that never throws
+for normal failures: it turns 'server down' or 'not JSON' into the same
+`{ ok: false, error }` shape the server uses, so the UI handles one shape."
+
+## AbortController
+
+**What it is:** a browser object that can cancel a `fetch` that is still
+running.
+
+**Problem it solves:** without it, Cancel could only hide the spinner while the
+request kept going in the background.
+
+**How we use it here:** `useStudySet` creates one per request and passes its
+`signal` to `fetch`. Cancel, or a newer Generate, calls `abort()`; `fetch`
+then throws an `AbortError`, which the hook treats as "cancelled", not as an
+error.
+
+**Without it we would:** let old requests finish and only ignore their
+answers.
+
+**Interview answer:** "Abort stops the old request, but it is not my stale
+guard: an answer can already have arrived. The guard is a request number;
+only the newest request may update the screen."
+
+## useRef (React hook)
+
+**What it is:** a box whose value survives redraws, where changing the value
+does not cause a redraw.
+
+**Problem it solves:** some values must be remembered but never shown, and an
+`async` function must read their newest value after an `await`.
+
+**How we use it here:** `useStudySet` keeps the newest request number, the
+current `AbortController`, and the last notes (for Retry) in refs.
+
+**Without it we would:** use state, which redraws for nothing, and whose value
+inside `generate` would still be the old one after `await`, breaking the stale
+guard.
+
+**Interview answer:** "useState is for what the screen shows; useRef is for
+what the component must remember but never shows, like a private field."
+
+## useEffect (React hook)
+
+**What it is:** code React runs after drawing a component, with an optional
+cleanup that runs when the component disappears.
+
+**Problem it solves:** timers and other side effects must start after the
+screen is drawn and must be stopped when they are no longer needed.
+
+**How we use it here:** `Loading` in `StatusView.jsx` starts a 5-second timer
+that switches to "Still working…", and its cleanup cancels the timer if the
+answer arrives first. `Loading` only exists while a request runs, so every
+request gets a fresh 5 seconds.
+
+**Without it we would:** start timers during drawing and leak them when the
+component goes away.
+
+**Interview answer:** "The effect starts the timer and returns a cleanup that
+clears it; `[]` means run once when the component appears. StrictMode runs
+effects twice in development to catch missing cleanups."
