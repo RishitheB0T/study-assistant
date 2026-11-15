@@ -279,3 +279,44 @@ where an old answer arrives last.
   disappears and its effect cleanup clears the timer.
 
 **Still shaky:** —
+
+## Step 1.5 — Debug switch   (2026-11-15)
+
+**What we built:** `?chaos=<mode>` on the server (`StudySetService` decides:
+Gemini, or a fake reply from `ChaosReplies`) and a debug panel in the app,
+shown only with `?debug=1`. Six modes: `malformed`, `wrong_shape`, `empty`,
+`partial`, `slow`, `fail`. I wrote the mode picker as radio buttons. Every
+mode was driven through the real app and server, including `fail` → switch to
+real Gemini → Retry.
+
+**Ideas I learned (plain words, then the proper name):**
+
+- A layer that makes a decision between the controller and the client: a
+  service (`StudySetService`). We added it only when it had a real job.
+- An optional value in the address: a query parameter, `@RequestParam(required
+  = false)`.
+- A function that remembers the variables from when it was created: a closure.
+  Each redraw makes a new `generate` that remembers the current `chaos`, so
+  Retry uses the mode chosen now.
+- Reading the page address: `new URLSearchParams(window.location.search)`.
+- Pick-one-of-many controls: radio buttons with the same `name`, controlled by
+  React through `checked` and `onChange`.
+
+**Why we did it this way, and what the alternative was:**
+
+- Fake replies are made on the server, as text, so the real checkpoint has to
+  handle them; faking them in the browser would skip the real path.
+- Debug replies never call Gemini, so they cost nothing and need no key.
+- The panel is hidden unless `?debug=1`, so normal users never see it.
+
+**Interview questions and my answers:**
+
+- *How do you show that bad AI output is handled?* Open `?debug=1`, pick
+  `malformed` or `partial`, and press Generate.
+- *With `?chaos=partial` the server says `ok: true`. Who decides 2 items are
+  skipped?* The checkpoint, `parseStudySet`; the server passes the text on
+  untouched.
+- *Why does Retry use the newly selected mode?* `useStudySet(chaos)` runs on
+  every redraw, so `retry` calls a `generate` that remembers the current mode.
+
+**Still shaky:** —

@@ -42,6 +42,8 @@ questions, never raw model text.
   or empty answer). Every request is numbered, so an older, slower answer can
   never replace a newer one. Generate waits while a request is running, and a
   new set always starts with fresh cards and a fresh quiz.
+- Debug mode (`?debug=1`): a panel to make the server return a chosen kind of
+  bad AI output on demand, so every failure path can be shown (see below).
 
 ## Tech stack
 
@@ -102,6 +104,27 @@ of two shapes:
 The server never checks the model's answer itself. The web app checks it before
 anything is shown.
 
+## Debug mode: showing bad AI output on demand
+
+Open http://localhost:5173/?debug=1. A dashed "Debug" panel appears above the
+text box. Pick a mode, then press Generate: the server returns a fake reply
+instead of calling Gemini (so it costs nothing), and the app has to handle it
+like a real one.
+
+| Mode | The server returns | The app shows |
+| --- | --- | --- |
+| real Gemini | a real answer | the cards and the quiz |
+| `malformed` | cut-off JSON | "cut off or garbled" + Retry |
+| `wrong_shape` | `{"cards": []}` | "unexpected format" + Retry |
+| `empty` | an empty answer | "no usable cards" + Retry |
+| `partial` | a set with 2 broken items | the set + "2 items were skipped" |
+| `slow` | a valid set after 8 seconds | "Still working…" after 5 seconds; Cancel works |
+| `fail` | `502 PROVIDER_ERROR` | the error + Retry |
+
+Retry uses the mode selected at that moment: pick `fail`, press Generate, then
+switch to "real Gemini" and press Retry. The same modes work from any HTTP
+client: `POST /api/generate?chaos=malformed`.
+
 ## Project files
 
 ```
@@ -110,7 +133,8 @@ vite.config.js      Vite settings: the React plugin, and /api forwarded to the s
 src/main.jsx        Starting point: hands the root element to React
 src/index.css       Styles for the whole app
 src/App.jsx         The top-level component: holds the current study set
-src/components/     TopicForm, Flashcard, Quiz, Results, StatusView (loading / error / skipped)
+src/components/     TopicForm, Flashcard, Quiz, Results, StatusView (loading / error / skipped),
+                    DebugPanel (only with ?debug=1)
 src/hooks/          useStudySet: one request at a time (status, cancel, retry, stale guard)
                     useQuiz: the quiz rules (reducer) and the values the screen needs
 src/lib/            api.js: the only fetch call; always returns the server's ok/error shape
@@ -119,6 +143,7 @@ src/lib/            api.js: the only fetch call; always returns the server's ok/
                     sampleSet: hand-written study data in the shape the AI must return
 server/             Spring Boot API server (Maven project), package com.studyassistant.server
   controller/   GenerateController: POST /api/generate; @Valid rejects bad input
+  service/      StudySetService (Gemini, or a debug reply), ChaosReplies (the ?chaos= fake replies)
   dto/          GenerateRequest, GenerateResponse, ErrorResponse: the JSON the frontend sees
   client/       GeminiClient (builds the request, reads the reply), GeminiResponse
   config/       GeminiProperties (typed gemini.* settings), GeminiConfig (RestClient + timeouts)
