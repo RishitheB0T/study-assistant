@@ -17,12 +17,15 @@ export function useStudySet() {
   const [error, setError] = useState(null)
   const latestRequest = useRef(0) // number of the newest request
   const controller = useRef(null) // AbortController of the newest request
+  const lastNotes = useRef('') // notes of the newest request, for Retry
 
   async function generate(notes) {
     controller.current?.abort()
     latestRequest.current += 1
     const requestNumber = latestRequest.current
     controller.current = new AbortController()
+    lastNotes.current = notes
+    setError(null)
     setStatus('loading')
 
     let reply
@@ -54,5 +57,16 @@ export function useStudySet() {
     setStatus('error')
   }
 
-  return { status, studySet, skipped, error, generate }
+  // Stop waiting. Raising the number also ignores an answer that is already arriving.
+  function cancel() {
+    controller.current?.abort()
+    latestRequest.current += 1
+    setStatus(studySet ? 'success' : 'idle')
+  }
+
+  function retry() {
+    generate(lastNotes.current)
+  }
+
+  return { status, studySet, skipped, error, generate, cancel, retry }
 }
