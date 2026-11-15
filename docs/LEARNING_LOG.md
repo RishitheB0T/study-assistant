@@ -183,3 +183,49 @@ this step.
 
 **Still shaky:** the frontend side of the request (`fetch`) is not built yet;
 it comes in step 1.4.
+
+## Step 1.3 — The checkpoint   (2026-11-15)
+
+**What we built:** `parseStudySet(text)`, the one function that every piece of
+outside data passes before the screen sees it, with the Zod rules in
+`schema.js` and 10 Vitest tests. I wrote the missing-field tests; we then
+tightened them so each bad item breaks exactly one rule, and added the
+repeated-id test.
+
+**Ideas I learned (plain words, then the proper name):**
+
+- One function stands between outside data and the screen, and always returns
+  a result instead of throwing: the checkpoint, `parseStudySet`.
+- Describing valid data once and checking any value against it: a schema
+  (Zod). `safeParse` returns `{ success, data | error }`.
+- Choosing the rules by a field's value: a discriminated union
+  (`z.discriminatedUnion('type', ...)`), like Jackson's `@JsonTypeInfo`.
+- Keeping the good items and counting the bad ones: partial results (`skipped`).
+- A list that remembers what it has seen: a `Set` (like `HashSet`).
+- A test should fail for exactly one reason: start from a valid object and
+  break one field (`{ ...mcq('2'), question: undefined }`; `JSON.stringify`
+  leaves `undefined` fields out).
+- Windows drive-letter case (`c:\` vs `C:\`) can make Vitest load twice; we
+  start it from the folder's real path.
+
+**Why we did it this way, and what the alternative was:**
+
+- Items are checked one at a time, not with `z.array(ItemSchema)`, so one bad
+  card does not throw away the whole set.
+- The checkpoint runs in the browser, not on the server, because saved
+  sessions and imported files (later steps) must pass the same checks.
+- `answerIndex` must be 0 to 3 and options exactly 4: these are exactly the
+  assumptions `Quiz.jsx` makes, so a checked item cannot crash it.
+
+**Interview questions and my answers:**
+
+- *What does the checkpoint return for cut-off JSON?* `{ ok: false, reason:
+  'malformed' }`, because `JSON.parse` throws and we catch it.
+- *8 good cards and 1 with `answerIndex: 7`?* `{ ok: true, data: (8 cards),
+  skipped: 1 }`.
+- *Why does `.trim()` come before `.min(1)`?* So text made only of spaces
+  becomes empty first and is rejected.
+- *What makes a good test?* It starts from valid data and changes one thing,
+  so it fails only for the reason in its name.
+
+**Still shaky:** —

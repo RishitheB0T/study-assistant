@@ -161,3 +161,45 @@ which breaks easily.
 **Interview answer:** "I send a JSON schema with the request, so the model
 answers in the shape my app expects. I still validate the answer in the
 browser, because a schema makes good output likely, not guaranteed."
+
+## Zod
+
+**What it is:** a library for describing what correct data looks like, once,
+and then checking any value against that description.
+
+**Problem it solves:** the AI's answer is outside data. Checking every field by
+hand with `if` statements is long, easy to get wrong, and hard to read.
+
+**How we use it here:** `src/lib/schema.js` holds the rules: a flashcard, a
+multiple-choice question (exactly 4 options, `answerIndex` 0 to 3), and the
+outer set. `z.discriminatedUnion('type', ...)` picks the rules by the `type`
+field. `parseStudySet` calls `safeParse`, which returns a result instead of
+throwing, and gets back cleaned data (trimmed text, unknown fields dropped).
+
+**Without it we would:** write many nested `if` checks inside `parseStudySet`.
+
+**Interview answer:** "Zod is like Bean Validation for JavaScript objects. I
+describe a valid card once, and `safeParse` tells me whether outside data
+matches, without throwing, so my checkpoint can return a clear reason."
+
+## Vitest
+
+**What it is:** a test runner for JavaScript that uses Vite, the JavaScript
+equivalent of JUnit.
+
+**Problem it solves:** checking the checkpoint by hand after every change is
+slow and easy to forget. Tests check every case in under a second.
+
+**How we use it here:** `npm test` runs `src/lib/parseStudySet.test.js`: 10
+tests covering a valid set, empty text, broken JSON, the wrong shape, each
+missing field, and repeated ids. `scripts/run-tests.js` starts Vitest from the
+folder's real path, because a lower-case drive letter (Git Bash on Windows)
+makes Vitest load itself twice and fail.
+
+**Without it we would:** test by pasting inputs into the browser console, and
+miss regressions.
+
+**Interview answer:** "`describe` groups tests like a test class, `test` is a
+`@Test` method, and `expect(...).toEqual(...)` is `assertEquals`. Each bad
+item in my tests breaks exactly one rule, so a test can only pass for the
+reason in its name."

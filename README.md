@@ -7,9 +7,10 @@ text). Before anything reaches the screen, the app checks that data against a
 fixed set of rules. The user only ever sees clean, interactive cards and
 questions, never raw model text.
 
-> **Status:** the study screens work with built-in sample data, and the API
-> server that calls Gemini is ready. Connecting the screens to the server is
-> the next step.
+> **Status:** the study screens work with built-in sample data, the API server
+> that calls Gemini is ready, and the checkpoint that validates the model's
+> answer is built and tested. Connecting the screens to the server is the next
+> step.
 
 ## Done so far
 
@@ -31,6 +32,11 @@ questions, never raw model text.
   Gemini API key on the server, rejects empty or too-long notes before calling
   the model, gives up after 20 seconds, and always replies in one of two JSON
   shapes (see below).
+- The checkpoint, `parseStudySet`: one function that every piece of outside
+  data must pass before the screen sees it. It never throws. It returns the
+  clean set, or a reason: `empty`, `malformed` (not JSON) or `wrong_shape`. Bad
+  items and repeated ids are skipped and counted, so one broken card does not
+  throw away a good set. Covered by 10 automatic tests.
 
 ## Tech stack
 
@@ -42,11 +48,13 @@ questions, never raw model text.
 - **Gemini API** (`gemini-3.5-flash-lite`): the model, asked for JSON that
   follows a fixed schema.
 - **concurrently**: lets `npm start` run the web app and the server together.
+- **Zod 4**: the rules a valid study set must follow, checked in the browser.
+- **Vitest 5**: automatic tests for the checkpoint (`npm test`).
 
 ## Getting started
 
-Requires **Node.js 20.19 or newer** and **a JDK, version 17 or newer** (21
-recommended). Maven is not needed: the project includes the Maven wrapper.
+Requires **Node.js 22.12 or newer** (Vitest 5 needs it) and **a JDK, version
+17 or newer** (21 recommended). Maven is not needed: the project includes the Maven wrapper.
 
 1. Get a free Gemini API key at https://aistudio.google.com/apikey.
 2. Copy `.env.example` to `.env` and paste the key after `GEMINI_API_KEY=`.
@@ -65,6 +73,8 @@ while the Maven wrapper downloads Maven and the server's dependencies.
 
 `npm start` runs both parts. To run them separately: `npm run dev` (web app on
 port 5173) and `npm run server` (API on port 8787).
+
+Run the tests with `npm test`.
 
 ## The API
 
@@ -97,7 +107,9 @@ src/index.css       Styles for the whole app
 src/App.jsx         The top-level component: holds the current study set
 src/components/     TopicForm, Flashcard, Quiz, Results
 src/hooks/          useQuiz: the quiz rules (reducer) and the values the screen needs
-src/lib/            sampleSet: hand-written study data in the shape the AI must return
+src/lib/            parseStudySet: the checkpoint (+ parseStudySet.test.js)
+                    schema: the Zod rules for each item type and the set
+                    sampleSet: hand-written study data in the shape the AI must return
 server/             Spring Boot API server (Maven project), package com.studyassistant.server
   controller/   GenerateController: POST /api/generate; @Valid rejects bad input
   dto/          GenerateRequest, GenerateResponse, ErrorResponse: the JSON the frontend sees
@@ -106,6 +118,7 @@ server/             Spring Boot API server (Maven project), package com.studyass
   exception/    ErrorCode, ApiException, ApiExceptionHandler: every failure -> { ok: false, error }
   resources/    application.properties, study-set-schema.json (the shape Gemini must answer in)
 scripts/            start-server.js: starts the server with the Maven wrapper on any OS
+                    run-tests.js: runs Vitest from the folder's real path (fixes Git Bash on Windows)
 docs/               Learning log and tool notes
 .env.example        Template for .env (the API key)
 package.json        Project name, scripts and dependencies
