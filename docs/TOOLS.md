@@ -282,3 +282,25 @@ component goes away.
 **Interview answer:** "The effect starts the timer and returns a cleanup that
 clears it; `[]` means run once when the component appears. StrictMode runs
 effects twice in development to catch missing cleanups."
+
+## localStorage
+
+**What it is:** a small key-value store built into the browser, kept per
+website. It holds text only and survives refreshes and restarts.
+
+**Problem it solves:** without it, refreshing the page loses the set the user
+just generated.
+
+**How we use it here:** `src/lib/storage.js`. `saveStudySet` stores the last
+clean set as JSON text under `study-assistant:last-set`. `loadStudySet` reads
+it back through `parseStudySet` (saved data is outside data too) and deletes it
+if the checkpoint rejects it. Both catch errors, because storage can be full or
+blocked in some private modes. `useStudySet` loads it once as lazy initial
+state: `useState(() => loadStudySet())`.
+
+**Without it we would:** need a server-side database and logins, which are out
+of scope.
+
+**Interview answer:** "The last set is saved in localStorage, but loading goes
+through the same checkpoint as the AI's answer, so corrupted or outdated saved
+data is ignored instead of crashing the page."

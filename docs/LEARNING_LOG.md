@@ -320,3 +320,45 @@ real Gemini → Retry.
   every redraw, so `retry` calls a `generate` that remembers the current mode.
 
 **Still shaky:** —
+
+## Step 1.6 — Saving, keyboard and phone layout   (2026-11-15)
+
+**What we built:** the last set is saved in `localStorage` and restored on
+refresh through the checkpoint; keys 1-4 answer quiz questions and focus moves
+to Next; long words wrap and buttons are at least 44px tall. I wrote
+`saveStudySet` (it needed fixing: a stray line outside the function crashed the
+whole app, and it saved a hard-coded set instead of the real one).
+
+**Ideas I learned (plain words, then the proper name):**
+
+- A browser key-value store that survives refreshes: `localStorage` (text only).
+- Running an expensive starting value only once: lazy initial state,
+  `useState(() => loadStudySet())`.
+- Saved data is outside data: it goes through the checkpoint too.
+- A code line at the top level of a module runs when the module loads; using an
+  undefined name there throws and the whole app fails to start (blank page).
+- Giving focus to an element from code: a ref on the element plus
+  `ref.current.focus()` inside `useEffect`.
+- Listening to keys on the whole page: `window.addEventListener('keydown', …)`
+  in an effect, with a cleanup that removes it.
+- Hooks must run on every draw, so they come before any early `return`.
+- Measure before fixing: the page was 379px wide on a 320px screen, buttons
+  were 42px tall, and the text box was already 16px (no change needed).
+
+**Why we did it this way, and what the alternative was:**
+
+- Only clean sets are saved, right after they pass the checkpoint.
+- The number keys are ignored while typing in the text box.
+- The keyboard tip is hidden on touch screens (`@media (hover: none)`).
+
+**Interview questions and my answers:**
+
+- *Why check a saved set your own app wrote?* It is outside our code once
+  saved: an older app version, a manual edit, or corruption can change it.
+- *What happens if localStorage is blocked?* Both functions catch the error;
+  the app works and just does not remember the set.
+- *Why must the hooks in `Quiz` come before `if (quiz.isFinished) return`?*
+  React matches hooks by their order on every draw; skipping some on some draws
+  breaks that.
+
+**Still shaky:** —

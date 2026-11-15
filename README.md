@@ -44,6 +44,13 @@ questions, never raw model text.
   new set always starts with fresh cards and a fresh quiz.
 - Debug mode (`?debug=1`): a panel to make the server return a chosen kind of
   bad AI output on demand, so every failure path can be shown (see below).
+- The last set is saved in the browser (`localStorage`) and comes back after a
+  refresh. Saved data goes through the same checkpoint as the AI's answer, so
+  corrupted or outdated data is ignored instead of breaking the page.
+- Keyboard: keys 1-4 answer a quiz question, focus moves to Next, and Enter
+  goes on. Flashcards flip with Enter or Space.
+- Phone layout checked at 320 and 390 pixels wide: long words wrap, and every
+  button is at least 44 pixels tall (the recommended touch target).
 
 ## Tech stack
 
@@ -138,6 +145,7 @@ src/components/     TopicForm, Flashcard, Quiz, Results, StatusView (loading / e
 src/hooks/          useStudySet: one request at a time (status, cancel, retry, stale guard)
                     useQuiz: the quiz rules (reducer) and the values the screen needs
 src/lib/            api.js: the only fetch call; always returns the server's ok/error shape
+                    storage.js: saves the last set; loading goes through the checkpoint
                     parseStudySet: the checkpoint (+ parseStudySet.test.js)
                     schema: the Zod rules for each item type and the set
                     sampleSet: hand-written study data in the shape the AI must return
@@ -163,11 +171,10 @@ package-lock.json   Exact version of every installed package
 - Running the app needs a JDK as well as Node.js.
 - When Gemini is briefly overloaded (HTTP 503), the user sees an error and has
   to press Retry; there is no automatic retry yet.
-- Basic styling only: no dark mode, and the phone layout has not been tested
-  on real devices yet.
-- After answering a quiz question, keyboard focus is not moved to the Next
-  button.
-- Nothing is saved: refreshing the page clears the set and the quiz progress.
+- Basic styling only: no dark mode. The phone layout was checked in a
+  phone-sized browser window, not yet on real devices.
+- Only the last set is saved, not the quiz progress: after a refresh the quiz
+  starts again from question 1.
 - No favicon, so the browser logs a harmless 404 for `/favicon.ico`.
 
 ## How this was built (AI usage)
