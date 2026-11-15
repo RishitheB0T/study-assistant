@@ -1,18 +1,12 @@
-import { useState } from 'react'
 import Flashcard from './components/Flashcard.jsx'
 import Quiz from './components/Quiz.jsx'
+import StatusView from './components/StatusView.jsx'
 import TopicForm from './components/TopicForm.jsx'
-import { sampleSet } from './lib/sampleSet.js'
+import { useStudySet } from './hooks/useStudySet.js'
 
 function App() {
-  // null means "nothing generated yet", which is the empty state.
-  const [studySet, setStudySet] = useState(null)
-
-  // Fake for now: `text` is not used yet and every topic gives the sample set.
-  // Step 1.4 sends `text` to the AI here.
-  function handleGenerate(text) {
-    setStudySet(sampleSet)
-  }
+  const { status, studySet, skipped, error, receivedCount, generate, cancel, retry } =
+    useStudySet()
 
   const flashcards =
     studySet === null ? [] : studySet.items.filter((item) => item.type === 'flashcard')
@@ -22,18 +16,27 @@ function App() {
   return (
     <main>
       <h1>Study Assistant</h1>
-      <TopicForm onGenerate={handleGenerate} />
-      {studySet === null ? (
+      <TopicForm onGenerate={generate} isBusy={status === 'loading'} />
+      <StatusView
+        status={status}
+        error={error}
+        skipped={skipped}
+        onCancel={cancel}
+        onRetry={retry}
+      />
+      {studySet === null && status === 'idle' ? (
         <p>Paste your notes above and press Generate to get flashcards and a quiz.</p>
-      ) : (
-        <>
+      ) : null}
+      {studySet !== null ? (
+        // A new key for every new set: React rebuilds the cards and the quiz from scratch.
+        <section key={receivedCount}>
           <h2>{studySet.title}</h2>
           {flashcards.map((card) => (
             <Flashcard key={card.id} card={card} />
           ))}
-          <Quiz questions={questions} />
-        </>
-      )}
+          {questions.length > 0 ? <Quiz questions={questions} /> : null}
+        </section>
+      ) : null}
     </main>
   )
 }

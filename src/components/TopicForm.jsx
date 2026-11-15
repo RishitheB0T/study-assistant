@@ -3,7 +3,8 @@ import { useState } from 'react'
 const MAX_LENGTH = 4000
 
 // The free-form text box. It only collects text; App decides what to do with it.
-function TopicForm({ onGenerate }) {
+// isBusy: a request is running, so Generate waits (the user can Cancel first).
+function TopicForm({ onGenerate, isBusy }) {
   const [text, setText] = useState('')
   const isEmpty = text.trim() === ''
   const isTooLong = text.length > MAX_LENGTH
@@ -26,7 +27,7 @@ function TopicForm({ onGenerate }) {
         {text.length} / {MAX_LENGTH}
         {isTooLong ? ' (too long, please shorten it)' : ''}
       </p>
-      <button type="submit" disabled={isEmpty || isTooLong}>
+      <button type="submit" disabled={isEmpty || isTooLong || isBusy}>
         Generate
       </button>
     </form>

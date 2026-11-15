@@ -15,6 +15,7 @@ export function useStudySet() {
   const [studySet, setStudySet] = useState(null)
   const [skipped, setSkipped] = useState(0)
   const [error, setError] = useState(null)
+  const [receivedCount, setReceivedCount] = useState(0) // goes up each time a new set arrives
   const latestRequest = useRef(0) // number of the newest request
   const controller = useRef(null) // AbortController of the newest request
   const lastNotes = useRef('') // notes of the newest request, for Retry
@@ -49,6 +50,7 @@ export function useStudySet() {
     }
     setStudySet(result.data)
     setSkipped(result.skipped)
+    setReceivedCount((count) => count + 1)
     setStatus('success')
   }
 
@@ -68,5 +70,5 @@ export function useStudySet() {
     generate(lastNotes.current)
   }
 
-  return { status, studySet, skipped, error, generate, cancel, retry }
+  return { status, studySet, skipped, error, receivedCount, generate, cancel, retry }
 }
