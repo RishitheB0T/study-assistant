@@ -6,7 +6,7 @@
     "dev": "vite",
     "server": "node scripts/start-server.js",
     "start": "concurrently --names web,api --prefix-colors cyan,magenta \"npm:dev\" \"npm:server\"",
-    "test": "vitest run"
+    "test": "node scripts/run-tests.js"
   },
   "dependencies": {
     "react": "^19.3.1",
