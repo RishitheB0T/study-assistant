@@ -1,12 +1,11 @@
 package com.studyassistant.server.client;
 
+import com.studyassistant.server.config.GeminiProperties;
 import com.studyassistant.server.exception.ApiException;
 import com.studyassistant.server.exception.ErrorCode;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.http.HttpClient;
 import java.net.http.HttpTimeoutException;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -15,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
@@ -42,23 +40,17 @@ public class GeminiClient {
             """;
 
     private final RestClient restClient;
-    private final String apiKey;
-    private final String model;
+    private final GeminiProperties properties;
     private final Map<?, ?> studySetSchema;
 
+    /** geminiRestClient and properties come from GeminiConfig; the schema is read once, here. */
     public GeminiClient(
+            RestClient geminiRestClient,
+            GeminiProperties properties,
             JsonMapper jsonMapper,
-            @Value("${gemini.api-key}") String apiKey,
-            @Value("${gemini.model}") String model,
-            @Value("${gemini.base-url}") String baseUrl,
-            @Value("${gemini.timeout}") Duration timeout,
             @Value("classpath:study-set-schema.json") Resource schemaFile) throws IOException {
-        var httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
-        var requestFactory = new JdkClientHttpRequestFactory(httpClient);
-        requestFactory.setReadTimeout(timeout);
-        this.restClient = RestClient.builder().baseUrl(baseUrl).requestFactory(requestFactory).build();
-        this.apiKey = apiKey;
-        this.model = model;
+        this.restClient = geminiRestClient;
+        this.properties = properties;
         try (InputStream in = schemaFile.getInputStream()) {
             this.studySetSchema = jsonMapper.readValue(in, Map.class);
         }
@@ -66,14 +58,14 @@ public class GeminiClient {
 
     /** Returns the model's raw text. Never parses it: checking the data is the frontend's job. */
     public String generateStudySet(String notes) {
-        if (apiKey == null || apiKey.isBlank()) {
+        if (!properties.hasApiKey()) {
             throw new ApiException(ErrorCode.NO_KEY,
                     "The server has no Gemini API key. Add GEMINI_API_KEY to the .env file and restart.");
         }
         try {
             GeminiResponse response = restClient.post()
-                    .uri("/models/{model}:generateContent", model)
-                    .header("x-goog-api-key", apiKey)
+                    .uri("/models/{model}:generateContent", properties.model())
+                    .header("x-goog-api-key", properties.apiKey())
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(requestBody(notes))
                     .retrieve()
