@@ -2,8 +2,17 @@ import { describe, expect, test } from 'vitest'
 import { parseStudySet } from './parseStudySet.js'
 import { sampleSet } from './sampleSet.js'
 
-// Helpers: one valid flashcard, and items wrapped as the JSON text the AI would send.
+// Helpers: one valid flashcard, one valid question, and items wrapped as the JSON
+// text the AI would send.
 const card = (id) => ({ type: 'flashcard', id, front: 'Question ' + id, back: 'Answer ' + id })
+const mcq = (id) => ({
+  type: 'mcq',
+  id,
+  question: 'Question ' + id,
+  options: ['A', 'B', 'C', 'D'],
+  answerIndex: 0,
+  explanation: 'Because.',
+})
 const setText = (items) => JSON.stringify({ title: 'Plants', items })
 
 describe('parseStudySet', () => {
@@ -29,7 +38,47 @@ describe('parseStudySet', () => {
     expect(parseStudySet(wrongNames)).toEqual({ ok: false, reason: 'wrong_shape' })
   })
 
-  // YOUR PART: replace each test.todo with a real test (see the instructions in chat).
-  test.todo('keeps the good cards and skips one bad card')
-  test.todo('skips an item whose id repeats an earlier one')
+  // Each bad item breaks exactly one rule, so each test can only pass for the reason in its name.
+  test('skips an item with a missing front', () => {
+    const items = [card('1'), { type: 'flashcard', id: '2', back: 'Answer 2' }]
+    const result = parseStudySet(setText(items))
+    expect(result.ok).toBe(true)
+    expect(result.skipped).toBe(1)
+    expect(result.data.items).toEqual([card('1')])
+  })
+  test('skips an item with a missing back', () => {
+    const items = [card('1'), { type: 'flashcard', id: '2', front: 'Question 2' }]
+    const result = parseStudySet(setText(items))
+    expect(result.ok).toBe(true)
+    expect(result.skipped).toBe(1)
+    expect(result.data.items).toEqual([card('1')])
+  })
+  test('skips an item with a missing question', () => {
+    const items = [card('1'), { ...mcq('2'), question: undefined }]
+    const result = parseStudySet(setText(items))
+    expect(result.ok).toBe(true)
+    expect(result.skipped).toBe(1)
+    expect(result.data.items).toEqual([card('1')])
+  })
+  test('skips an item with a missing options array', () => {
+    const items = [card('1'), { ...mcq('2'), options: undefined }]
+    const result = parseStudySet(setText(items))
+    expect(result.ok).toBe(true)
+    expect(result.skipped).toBe(1)
+    expect(result.data.items).toEqual([card('1')])
+  })
+  test('skips an item with a missing answerIndex', () => {
+    const items = [card('1'), { ...mcq('2'), answerIndex: undefined }]
+    const result = parseStudySet(setText(items))
+    expect(result.ok).toBe(true)
+    expect(result.skipped).toBe(1)
+    expect(result.data.items).toEqual([card('1')])
+  })
+  test('skips an item whose id repeats an earlier one', () => {
+    const items = [card('1'), card('1'), mcq('2')]
+    const result = parseStudySet(setText(items))
+    expect(result.ok).toBe(true)
+    expect(result.skipped).toBe(1)
+    expect(result.data.items).toEqual([card('1'), mcq('2')])
+  })
 })
