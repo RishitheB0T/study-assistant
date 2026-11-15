@@ -73,3 +73,17 @@ form button:disabled {
   background: #ffebe9;
   border-color: #cf222e;
 }
+
+/* Debug panel (only with ?debug=1): dashed so it never looks like part of the app. */
+.debug-panel {
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem 1rem;
+  border: 2px dashed #bf8700;
+  border-radius: 0.5rem;
+}
+
+.debug-panel label {
+  display: inline-block;
+  margin: 0 1rem 0.25rem 0;
+  white-space: nowrap;
+}

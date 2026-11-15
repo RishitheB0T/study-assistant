@@ -10,7 +10,8 @@ const CHECKPOINT_MESSAGES = {
 }
 
 // One request at a time. status is one word: 'idle' | 'loading' | 'success' | 'error'.
-export function useStudySet() {
+// chaos: the debug mode chosen right now ('' = real Gemini). Retry also uses the current one.
+export function useStudySet(chaos) {
   const [status, setStatus] = useState('idle')
   const [studySet, setStudySet] = useState(null)
   const [skipped, setSkipped] = useState(0)
@@ -31,7 +32,7 @@ export function useStudySet() {
 
     let reply
     try {
-      reply = await requestStudySet(notes, controller.current.signal)
+      reply = await requestStudySet(notes, controller.current.signal, chaos)
     } catch {
       return // aborted: Cancel or a newer request took over
     }

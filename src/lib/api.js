@@ -1,9 +1,11 @@
 // The only place the frontend talks to the server.
 // Always returns the server's shape: { ok: true, text } or { ok: false, error: { code, message } }.
 // The one thing it lets through is an AbortError, so the caller can tell "cancelled" from "failed".
-export async function requestStudySet(notes, signal) {
+// chaos (debug only) asks the server for a fake bad reply, for example 'malformed'.
+export async function requestStudySet(notes, signal, chaos) {
+  const url = chaos ? '/api/generate?chaos=' + encodeURIComponent(chaos) : '/api/generate'
   try {
-    const response = await fetch('/api/generate', {
+    const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ notes }),
