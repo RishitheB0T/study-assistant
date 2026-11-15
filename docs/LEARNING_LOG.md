@@ -230,7 +230,7 @@ repeated-id test.
 
 **Still shaky:** —
 
-## Step 1.4 — Request lifecycle   (2026-11-15)
+## Step 1.4 — Request lifecycle   (2026-11-15, about 1 hour)
 
 **What we built:** the screens now really call the server. `api.js` (the only
 `fetch`), `useStudySet` (status word, checkpoint, stale guard, cancel, retry),
