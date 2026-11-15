@@ -148,5 +148,6 @@ and make sure I can explain, debug and extend all of it.
 
 ## Time spent
 
-About 3.5 hours so far: about 1.5 hours on setup and the study screens with
-sample data, and about 2 hours on the API server (still in progress).
+About 5 hours so far: about 1.5 hours on setup and the study screens with
+sample data, 2 hours on the API server, 1 hour on the checkpoint and its
+tests, and 30 minutes on miscellaneous setup and fixes (still in progress).

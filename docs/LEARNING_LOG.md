@@ -184,7 +184,7 @@ this step.
 **Still shaky:** the frontend side of the request (`fetch`) is not built yet;
 it comes in step 1.4.
 
-## Step 1.3 — The checkpoint   (2026-11-15)
+## Step 1.3 — The checkpoint   (2026-11-15, about 1 hour)
 
 **What we built:** `parseStudySet(text)`, the one function that every piece of
 outside data passes before the screen sees it, with the Zod rules in
