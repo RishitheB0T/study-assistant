@@ -15,7 +15,7 @@ function TopicForm({ onGenerate, isBusy }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="surface" onSubmit={handleSubmit}>
       <label htmlFor="notes">Paste your notes or type a topic</label>
       <textarea
         id="notes"
@@ -23,11 +23,11 @@ function TopicForm({ onGenerate, isBusy }) {
         value={text}
         onChange={(event) => setText(event.target.value)}
       />
-      <p>
+      <p className={isTooLong ? 'counter over' : 'counter'}>
         {text.length} / {MAX_LENGTH}
         {isTooLong ? ' (too long, please shorten it)' : ''}
       </p>
-      <button type="submit" disabled={isEmpty || isTooLong || isBusy}>
+      <button type="submit" className="primary" disabled={isEmpty || isTooLong || isBusy}>
         Generate
       </button>
     </form>

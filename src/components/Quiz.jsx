@@ -48,8 +48,8 @@ function Quiz({ questions }) {
   }
 
   return (
-    <section>
-      <p>Question {quiz.position} of {quiz.total}</p>
+    <section className="surface">
+      <p className="progress">Question {quiz.position} of {quiz.total}</p>
       <h3>{question.question}</h3>
       <div className="options">
         {question.options.map((option, i) => (
@@ -59,7 +59,7 @@ function Quiz({ questions }) {
         ))}
       </div>
       {isAnswered ? (
-        <div>
+        <div className="feedback">
           <p>{isCorrect ? 'Correct!' : 'Not quite. The answer is: ' + rightOption}</p>
           <p>{question.explanation}</p>
           <button type="button" ref={nextButton} onClick={quiz.next}>Next</button>

@@ -7,9 +7,9 @@ function StatusView({ status, error, skipped, onCancel, onRetry }) {
   }
   if (status === 'error') {
     return (
-      <div role="alert">
+      <div role="alert" className="error">
         <p>{error.message}</p>
-        <button type="button" onClick={onRetry}>
+        <button type="button" className="primary" onClick={onRetry}>
           Retry
         </button>
       </div>
@@ -20,7 +20,7 @@ function StatusView({ status, error, skipped, onCancel, onRetry }) {
       skipped === 1
         ? '1 item was skipped because it was incomplete.'
         : skipped + ' items were skipped because they were incomplete.'
-    return <p role="status">{message}</p>
+    return <p role="status" className="note">{message}</p>
   }
   return null
 }
@@ -35,8 +35,13 @@ function Loading({ onCancel }) {
   }, [])
 
   return (
-    <div role="status">
+    <div role="status" className="loading">
       <p>{isSlow ? 'Still working… this can take up to 20 seconds.' : 'Generating your study set…'}</p>
+      <div className="bars" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
       <button type="button" onClick={onCancel}>
         Cancel
       </button>

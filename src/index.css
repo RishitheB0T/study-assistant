@@ -1,5 +1,45 @@
-/* Styles for the whole app. Mobile first: everything works on a narrow
-   phone screen, and wider screens just get the same column with more space. */
+/* Styles for the whole app. Mobile first: the base rules fit a narrow phone,
+   and the one min-width rule below adds a second column on wider screens. */
+
+/* 1. Theme: every colour, the corner radius and the spacing live here. */
+:root {
+  color-scheme: light dark;
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --text: #1f2328;
+  --muted: #57606a;
+  --border: #d0d7de;
+  --accent: #0969da;
+  --accent-text: #ffffff;
+  --tint: #ddf4ff;
+  --good: #1a7f37;
+  --good-bg: #dafbe1;
+  --bad: #cf222e;
+  --bad-bg: #ffebe9;
+  --warn: #bf8700;
+  --radius: 0.625rem;
+  --space: 1rem;
+}
+
+/* Dark mode only swaps the variables; no other rule changes. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --text: #e6edf3;
+    --muted: #9198a1;
+    --border: #3d444d;
+    --accent: #1f6feb;
+    --tint: #10243e;
+    --good: #3fb950;
+    --good-bg: #12261e;
+    --bad: #f85149;
+    --bad-bg: #2d1316;
+    --warn: #d29922;
+  }
+}
+
+/* 2. Page: one centred column. */
 * {
   box-sizing: border-box;
 }
@@ -8,98 +48,177 @@ body {
   margin: 0;
   font-family: system-ui, sans-serif;
   line-height: 1.5;
-  background: #f6f8fa;
+  color: var(--text);
+  background: var(--bg);
 }
 
 main {
-  max-width: 40rem;
+  max-width: 44rem;
   margin: 0 auto;
-  padding: 1rem;
+  padding: var(--space) var(--space) 3rem;
   /* A very long word (or URL) wraps instead of pushing the page sideways on a phone. */
   overflow-wrap: anywhere;
 }
 
-textarea {
-  width: 100%;
-  font: inherit;
-  padding: 0.5rem;
+h1 { margin: 0.5rem 0 0; font-size: 1.75rem; }
+h2 { margin: 0; font-size: 1.25rem; }
+h3 { margin: 0 0 var(--space); font-size: 1.125rem; }
+.tagline { margin: 0; color: var(--muted); }
+
+/* Each area sits on its own surface. */
+.surface, .loading, .error, .flashcard {
+  margin-top: var(--space);
+  padding: var(--space);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
+/* 3. Buttons: quiet by default, one filled "primary" style for the main action. */
 button {
-  font: inherit;
   /* 44px: the recommended smallest touch target for a finger. */
   min-height: 44px;
   padding: 0.5rem 1rem;
-  background: white;
-  border: 1px solid #d0d7de;
-  border-radius: 0.5rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   cursor: pointer;
 }
 
-form button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+button:hover:not(:disabled) { border-color: var(--muted); }
+
+.primary {
+  font-weight: 600;
+  color: var(--accent-text);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
-/* Each flashcard is a full-width card. */
-.flashcard {
+.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Keyboard users always see where they are. */
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* 4. Form */
+form label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+
+textarea {
   display: block;
   width: 100%;
-  min-height: 5rem;
-  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  resize: vertical;
+}
+
+textarea:focus { border-color: var(--accent); }
+
+.counter { margin: 0.25rem 0 0.75rem; font-size: 0.875rem; color: var(--muted); text-align: right; }
+.counter.over { font-weight: 600; color: var(--bad); }
+
+/* 5. Study set: one column on phones, two columns of cards from 640px. */
+.study-set { display: grid; gap: var(--space); margin-top: calc(var(--space) * 2); }
+.study-set > * { margin-top: 0; }
+
+@media (min-width: 640px) {
+  .study-set { grid-template-columns: 1fr 1fr; }
+  .study-set > :not(.flashcard) { grid-column: 1 / -1; }
+}
+
+/* Flex with a column keeps the label and the text at the top (a button centres them by default). */
+.flashcard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 7.5rem;
   text-align: left;
+  animation: fade-a 0.25s ease;
 }
 
-/* Quiz options stacked one per line, easy to tap on a phone. */
-.options {
-  display: grid;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+/* The answer side is tinted. A different animation name restarts the fade on every flip. */
+.flashcard.flipped { background: var(--tint); border-color: var(--accent); animation-name: fade-b; }
+
+.side {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
-.options button {
-  text-align: left;
-}
+@keyframes fade-a { from { opacity: 0.3; } }
+@keyframes fade-b { from { opacity: 0.3; } }
 
-/* Keep locked options readable; browsers grey out disabled buttons. */
-.options button:disabled {
-  color: inherit;
-  cursor: default;
-}
+/* 6. Quiz and results */
+.progress, .hint, .note { font-size: 0.875rem; color: var(--muted); }
+.progress { margin: 0 0 0.25rem; }
+.hint { margin: 0; }
+
+.options { display: grid; gap: 0.5rem; margin-bottom: var(--space); }
+.options button { text-align: left; }
+.options button:disabled { cursor: default; }
 
 /* Added by the quiz after an answer: the right option, and a wrong pick. */
-.correct {
-  background: #dafbe1;
-  border-color: #1a7f37;
-}
+.correct { background: var(--good-bg); border-color: var(--good); }
+.wrong { background: var(--bad-bg); border-color: var(--bad); }
+.correct::before { content: '✓  '; font-weight: 700; color: var(--good); }
+.wrong::before { content: '✗  '; font-weight: 700; color: var(--bad); }
 
-.wrong {
-  background: #ffebe9;
-  border-color: #cf222e;
-}
+.feedback { padding: 0.75rem var(--space); background: var(--bg); border-radius: var(--radius); }
+.feedback p { margin: 0 0 0.5rem; }
 
-.hint {
-  color: #57606a;
-  font-size: 0.875rem;
-}
+.score { margin: 0; font-size: 2rem; font-weight: 700; }
 
 /* Touch screens have no number keys to press, so the keyboard tip is hidden there. */
 @media (hover: none) {
-  .hint {
-    display: none;
-  }
+  .hint { display: none; }
 }
 
-/* Debug panel (only with ?debug=1): dashed so it never looks like part of the app. */
+/* 7. States: loading, error, skipped items, nothing yet. */
+.loading p, .error p { margin: 0 0 0.75rem; }
+
+.bars span {
+  display: block;
+  height: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(90deg, var(--border) 25%, var(--bg) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.bars span:nth-child(2) { width: 85%; }
+.bars span:nth-child(3) { width: 60%; margin-bottom: 0.75rem; }
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.error { border-left: 4px solid var(--bad); }
+.note { margin: var(--space) 0 0; }
+.empty { margin: 2.5rem 0 0; text-align: center; color: var(--muted); }
+
+/* People who ask for less motion get no fade and no shimmer. */
+@media (prefers-reduced-motion: reduce) {
+  .flashcard, .bars span { animation: none; }
+}
+
+/* 8. Debug panel (only with ?debug=1): dashed so it never looks like part of the app. */
 .debug-panel {
-  margin-bottom: 1rem;
-  padding: 0.5rem 1rem 1rem;
-  border: 2px dashed #bf8700;
-  border-radius: 0.5rem;
+  margin-top: var(--space);
+  padding: 0.5rem var(--space) var(--space);
+  border: 2px dashed var(--warn);
+  border-radius: var(--radius);
 }
 
-.debug-panel label {
-  display: inline-block;
-  margin: 0 1rem 0.25rem 0;
-  white-space: nowrap;
-}
+.debug-panel h2 { margin: 0.5rem 0; }
+.debug-panel p { margin: 0 0 0.5rem; }
+.debug-panel label { display: inline-block; margin: 0 1rem 0.25rem 0; white-space: nowrap; }

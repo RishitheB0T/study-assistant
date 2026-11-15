@@ -22,6 +22,7 @@ function App() {
   return (
     <main>
       <h1>Study Assistant</h1>
+      <p className="tagline">Turn your notes into flashcards and a quiz.</p>
       {isDebug ? <DebugPanel mode={chaos} onChange={setChaos} /> : null}
       <TopicForm onGenerate={generate} isBusy={status === 'loading'} />
       <StatusView
@@ -32,11 +33,11 @@ function App() {
         onRetry={retry}
       />
       {studySet === null && status === 'idle' ? (
-        <p>Paste your notes above and press Generate to get flashcards and a quiz.</p>
+        <p className="empty">Paste your notes above and press Generate to get flashcards and a quiz.</p>
       ) : null}
       {studySet !== null ? (
         // A new key for every new set: React rebuilds the cards and the quiz from scratch.
-        <section key={receivedCount}>
+        <section key={receivedCount} className="study-set">
           <h2>{studySet.title}</h2>
           {flashcards.map((card) => (
             <Flashcard key={card.id} card={card} />

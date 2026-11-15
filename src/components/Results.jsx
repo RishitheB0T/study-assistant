@@ -5,13 +5,13 @@ function Results({ score, total, onRetest }) {
     onRetest()
   }
   return (
-    <section>
+    <section className="surface">
       <h3>Round complete</h3>
-      <p>You scored {score} / {total}.</p>
+      <p className="score">You scored {score} / {total}.</p>
       {wrongCount > 0 ? (
         <p>
           You missed {wrongCount} question{wrongCount > 1 ? 's' : ''}.{' '}
-          <button type="button" onClick={handleRetest}>Retest the misses</button>
+          <button type="button" className="primary" onClick={handleRetest}>Retest the misses</button>
         </p>
       ) : (
         <p>Perfect score! 🎉</p>

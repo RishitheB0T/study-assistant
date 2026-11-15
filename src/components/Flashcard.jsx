@@ -9,7 +9,8 @@ function Flashcard({ card }) {
   }
 
   return (
-    <button type="button" className="flashcard" onClick={handleClick}>
+    <button type="button" className={isFlipped ? 'flashcard flipped' : 'flashcard'} onClick={handleClick}>
+      <span className="side">{isFlipped ? 'Answer' : 'Question'}</span>
       {isFlipped ? card.back : card.front}
     </button>
   )
