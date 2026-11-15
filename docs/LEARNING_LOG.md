@@ -118,3 +118,68 @@ I wrote the `Results` re-test button and the option colouring (`optionClass`).
 
 **Still shaky:** following which function calls which across components (we
 traced every click line by line; worth revising).
+
+## Step 1.2 — The API server   (2026-11-15)
+
+**What we built:** a Spring Boot 4 server (Java 21) in `server/` with one
+endpoint, `POST /api/generate`. It validates the notes, calls Gemini with a JSON
+schema, and always replies `{ ok: true, text }` or
+`{ ok: false, error: { code, message } }`. Vite forwards `/api` to it, and
+`npm start` runs both. The server is organised into `controller`, `dto`,
+`client`, `config` and `exception` packages. It was tested against a fake
+Gemini (every failure case) and the real one (a valid set in about 3 seconds).
+The plan switched from Express to Spring Boot, and from Groq to Gemini, during
+this step.
+
+**Ideas I learned (plain words, then the proper name):**
+
+- The browser asks Vite, and Vite passes `/api` requests on to Spring: a dev
+  proxy. The browser only sees one address, so no CORS (the browser's rule
+  against calling a different address).
+- A secret the browser must never see stays on the server and is read from an
+  ignored file: `.env`, loaded with `spring.config.import`.
+- Asking the model to answer in a fixed JSON shape: structured output with a
+  JSON schema (`responseJsonSchema`).
+- Turning a low-level error into one the user understands, one layer at a
+  time: exception translation (`HttpTimeoutException` → `ResourceAccessException`
+  → `ApiException(TIMEOUT)` → JSON).
+- One class that catches exceptions for every controller:
+  `@RestControllerAdvice` with `@ExceptionHandler`. Spring picks the handler
+  whose parameter type is the closest match.
+- How long to wait to connect vs how long to wait for the answer: connect
+  timeout (5 s) vs read timeout (20 s).
+- Typed settings instead of loose `@Value`s: a `@ConfigurationProperties`
+  record. Its `toString` is overridden so the key can never be logged.
+- Running two programs from one command: `concurrently` in `npm start`.
+
+**Why we did it this way, and what the alternative was:**
+
+- Spring Boot instead of Express: I know Spring well, so I can explain and
+  debug it. The cost is that running the app needs a JDK as well as Node.
+- Spring's `RestClient` instead of the Gemini SDK: nothing hidden to explain.
+- The server returns the model's text without checking it. One checkpoint in
+  the browser checks everything that comes from outside (AI answers, saved
+  sessions, imports), so the rules live in one place.
+- No service layer yet: it would only pass calls through. It arrives in step
+  1.5, when the debug switch gives it real work.
+- Port 8787, because 8080 is used by a Windows service on my machine.
+
+**Interview questions and my answers:**
+
+- *Why do you need a backend at all?* To keep the API key secret. Anything in
+  the browser can be read in DevTools.
+- *How does an exception become a JSON error?* The controller only returns the
+  success type. Exceptions fly out of it, Spring's `DispatcherServlet` catches
+  them, and `ApiExceptionHandler` builds `ResponseEntity<ErrorResponse>`.
+- *What happens if Gemini takes 25 seconds?* The 20-second read timeout fires,
+  `GeminiClient` throws `ApiException(TIMEOUT)`, and the client gets 504 with a
+  clear message.
+- *Why not validate the study set on the server?* The schema makes good output
+  likely, not guaranteed, and other data sources need the same checks. One
+  checkpoint in the frontend covers all of them.
+- *How do you know the key is never logged?* It is sent only as a header, the
+  settings record hides it in `toString`, and I checked the logs: 0
+  occurrences.
+
+**Still shaky:** the frontend side of the request (`fetch`) is not built yet;
+it comes in step 1.4.

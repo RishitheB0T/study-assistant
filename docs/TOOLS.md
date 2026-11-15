@@ -33,7 +33,9 @@ the open page the moment a file is saved.
 **How we use it here:** `npm run dev` serves the app at `http://localhost:5173`.
 The React plugin, switched on in `vite.config.js`, turns JSX into plain
 JavaScript and adds Fast Refresh (only the changed component updates, and what
-is on screen is kept).
+is on screen is kept). Its dev-server proxy forwards every `/api/...` request
+to the Spring Boot server on port 8787, so the browser only ever talks to one
+address and there are no CORS problems.
 
 **Without it we would:** set up a bundler such as webpack and a JSX compiler
 such as Babel by hand, with much more configuration.
@@ -99,3 +101,63 @@ an answer, no skipping) inside each button's click handler.
 **Interview answer:** "All quiz changes go through one pure function, so the
 rules live in one place and I can test them without rendering anything. The
 screen just dispatches actions like 'answer' or 'next'."
+
+## Spring Boot (the API server)
+
+**What it is:** a Java framework that turns a few annotated classes into a
+running web server with JSON, validation and logging already set up.
+
+**Problem it solves:** the AI key must never reach the browser, so something
+outside the browser has to hold it and call the AI. Spring Boot does that with
+very little code, and in a language I already know well.
+
+**How we use it here:** one endpoint, `POST /api/generate`. `@Valid` rejects
+bad notes, `GeminiClient` calls Gemini with Spring's `RestClient` (20-second
+timeout), and `@RestControllerAdvice` turns every failure into
+`{ ok: false, error: { code, message } }`. `npm start` runs it through the
+Maven wrapper, so nobody needs Maven installed.
+
+**Without it we would:** use a small Node server such as Express, or call the
+AI from the browser and expose the key.
+
+**Interview answer:** "The server exists to keep the key secret and to turn
+every failure into one predictable JSON shape. It never checks the study set
+itself: that is the frontend checkpoint's job."
+
+## concurrently
+
+**What it is:** a small npm tool that runs several commands at once in one
+terminal and labels each line with where it came from.
+
+**Problem it solves:** the app needs two programs running (Vite and Spring
+Boot). Without it, everyone would need two terminals and two commands.
+
+**How we use it here:** `npm start` runs `concurrently "npm:dev" "npm:server"`.
+Output lines are prefixed `[web]` and `[api]`, and Ctrl+C stops both.
+
+**Without it we would:** tell people to open two terminals, or write a shell
+script that only works on one operating system.
+
+**Interview answer:** "`npm start` uses concurrently to start the Vite dev
+server and the Spring Boot server side by side, so `npm install && npm start`
+really does run the whole app."
+
+## Gemini API (structured output)
+
+**What it is:** Google's AI model, called over plain HTTPS with an API key.
+
+**Problem it solves:** turning free-form notes into flashcards and quiz
+questions, which is the part of the app that needs an AI.
+
+**How we use it here:** `POST .../models/gemini-3.5-flash-lite:generateContent`
+with the key in the `x-goog-api-key` header. `generationConfig` asks for
+`application/json` and sends `study-set-schema.json` as `responseJsonSchema`,
+so the answer comes back in our exact `{ title, items }` shape. The model's
+"thought" parts are skipped.
+
+**Without it we would:** ask for free text and try to cut cards out of it,
+which breaks easily.
+
+**Interview answer:** "I send a JSON schema with the request, so the model
+answers in the shape my app expects. I still validate the answer in the
+browser, because a schema makes good output likely, not guaranteed."
