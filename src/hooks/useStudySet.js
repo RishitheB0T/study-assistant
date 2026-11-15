@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { requestStudySet } from '../lib/api.js'
 import { parseStudySet } from '../lib/parseStudySet.js'
+import { loadStudySet, saveStudySet } from '../lib/storage.js'
 
 // What the user reads when the checkpoint rejects the AI's answer.
 const CHECKPOINT_MESSAGES = {
@@ -12,8 +13,9 @@ const CHECKPOINT_MESSAGES = {
 // One request at a time. status is one word: 'idle' | 'loading' | 'success' | 'error'.
 // chaos: the debug mode chosen right now ('' = real Gemini). Retry also uses the current one.
 export function useStudySet(chaos) {
-  const [status, setStatus] = useState('idle')
-  const [studySet, setStudySet] = useState(null)
+  // The last saved set (checked by the checkpoint), read once on the first draw only.
+  const [studySet, setStudySet] = useState(() => loadStudySet())
+  const [status, setStatus] = useState(studySet === null ? 'idle' : 'success')
   const [skipped, setSkipped] = useState(0)
   const [error, setError] = useState(null)
   const [receivedCount, setReceivedCount] = useState(0) // goes up each time a new set arrives
@@ -50,6 +52,7 @@ export function useStudySet(chaos) {
       return
     }
     setStudySet(result.data)
+    saveStudySet(result.data)
     setSkipped(result.skipped)
     setReceivedCount((count) => count + 1)
     setStatus('success')
