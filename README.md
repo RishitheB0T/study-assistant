@@ -11,7 +11,29 @@ questions, never raw model text.
 > the checkpoint validates the answer, and the cards and quiz appear. Loading,
 > error, empty, slow and cancelled requests are all handled.
 
-## Done so far
+## How it works
+
+```
+Browser (React)                                  Spring Boot server                Gemini
+TopicForm ── notes ──► useStudySet ──► POST /api/generate ──────────────────► generateContent
+                          │            (Vite forwards /api   @Valid checks the notes,   (asked for JSON
+                          │             during development)  adds the secret key        in a fixed schema)
+                          │        ◄── { ok: true, text }  or  { ok: false, error: { code, message } }
+                          ▼
+                 parseStudySet  ◄── the checkpoint: every piece of outside data passes here
+                    ├─ ok      → cards + quiz on screen, set saved in localStorage
+                    └─ not ok  → a clear message + Retry
+```
+
+One rule holds the design together: **nothing from outside our own code
+reaches the screen without passing `parseStudySet`**. That covers the AI's
+answer and the set saved in the browser. The checkpoint never throws; it
+returns either clean data or a reason (`empty`, `malformed`, `wrong_shape`),
+so every failure turns into a calm message instead of a crash. The server's
+job is narrower: keep the key secret, reject bad input before it costs a call,
+and turn every failure into one JSON shape.
+
+## Features
 
 - Project setup: Vite dev server with React, and a `.gitignore` that keeps
   dependencies, build output, secrets (`.env` files) and local-only files out
@@ -89,6 +111,24 @@ while the Maven wrapper downloads Maven and the server's dependencies.
 port 5173) and `npm run server` (API on port 8787).
 
 Run the tests with `npm test`.
+
+## A two-minute tour
+
+1. **Generate.** Paste a paragraph of notes (or just a topic, such as "the
+   water cycle") and press Generate. "Generating your study set…" appears, then
+   the cards and the quiz.
+2. **Flashcards.** Click a card, or Tab to it and press Enter, to flip it.
+3. **Quiz.** Press 1-4 to answer; the right option turns green and a wrong pick
+   red. Press Enter for the next question. At the end, "Retest the misses"
+   starts a new round with only the questions you got wrong.
+4. **Refresh the page.** The set is still there: it was saved in the browser
+   and checked again on the way back in.
+5. **Bad AI output, on purpose.** Open http://localhost:5173/?debug=1:
+   - `malformed`: "The AI's answer was cut off or garbled." and a Retry button.
+   - `partial`: the set appears with "2 items were skipped".
+   - `slow`: "Still working…" after 5 seconds; press Cancel and the current set
+     stays.
+   - `fail`, then switch to "real Gemini" and press Retry: a real set arrives.
 
 ## The API
 
@@ -187,8 +227,9 @@ and make sure I can explain, debug and extend all of it.
 
 ## Time spent
 
-About 6 hours 45 minutes so far: about 1.5 hours on setup and the study
+About 7 hours 45 minutes so far: about 1.5 hours on setup and the study
 screens with sample data, 2 hours on the API server, 1 hour on the checkpoint
 and its tests, 1 hour on connecting the screens to the server, 45 minutes on
-the debug switch, and 30 minutes on miscellaneous setup and fixes (still in
-progress).
+the debug switch, 1 hour on saving, keyboard controls and the phone layout,
+and 30 minutes on miscellaneous setup and fixes. The final README and the
+screen recording are still in progress.

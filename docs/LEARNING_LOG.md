@@ -321,7 +321,7 @@ real Gemini → Retry.
 
 **Still shaky:** —
 
-## Step 1.6 — Saving, keyboard and phone layout   (2026-11-15)
+## Step 1.6 — Saving, keyboard and phone layout   (2026-11-15, about 1 hour)
 
 **What we built:** the last set is saved in `localStorage` and restored on
 refresh through the checkpoint; keys 1-4 answer quiz questions and focus moves
