@@ -135,5 +135,5 @@ and make sure I can explain, debug and extend all of it.
 
 ## Time spent
 
-About 1.5 hours so far, covering setup and the study screens with sample data
-(still in progress).
+About 3.5 hours so far: about 1.5 hours on setup and the study screens with
+sample data, and about 2 hours on the API server (still in progress).

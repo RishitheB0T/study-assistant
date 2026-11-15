@@ -119,7 +119,7 @@ I wrote the `Results` re-test button and the option colouring (`optionClass`).
 **Still shaky:** following which function calls which across components (we
 traced every click line by line; worth revising).
 
-## Step 1.2 — The API server   (2026-11-15)
+## Step 1.2 — The API server   (2026-11-15, about 2 hours)
 
 **What we built:** a Spring Boot 4 server (Java 21) in `server/` with one
 endpoint, `POST /api/generate`. It validates the notes, calls Gemini with a JSON
