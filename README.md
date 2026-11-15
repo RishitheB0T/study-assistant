@@ -98,11 +98,13 @@ src/App.jsx         The top-level component: holds the current study set
 src/components/     TopicForm, Flashcard, Quiz, Results
 src/hooks/          useQuiz: the quiz rules (reducer) and the values the screen needs
 src/lib/            sampleSet: hand-written study data in the shape the AI must return
-server/             Spring Boot API server (Maven project)
-  GenerateController     POST /api/generate; @Valid rejects bad input
-  GeminiClient           the only class that reads the key and calls Gemini
-  ApiExceptionHandler    turns every failure into { ok: false, error }
-  study-set-schema.json  the JSON schema Gemini's answer must follow
+server/             Spring Boot API server (Maven project), package com.studyassistant.server
+  controller/   GenerateController: POST /api/generate; @Valid rejects bad input
+  dto/          GenerateRequest, GenerateResponse, ErrorResponse: the JSON the frontend sees
+  client/       GeminiClient (builds the request, reads the reply), GeminiResponse
+  config/       GeminiProperties (typed gemini.* settings), GeminiConfig (RestClient + timeouts)
+  exception/    ErrorCode, ApiException, ApiExceptionHandler: every failure -> { ok: false, error }
+  resources/    application.properties, study-set-schema.json (the shape Gemini must answer in)
 scripts/            start-server.js: starts the server with the Maven wrapper on any OS
 docs/               Learning log and tool notes
 .env.example        Template for .env (the API key)
