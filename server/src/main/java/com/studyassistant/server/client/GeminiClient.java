@@ -1,5 +1,7 @@
-package com.studyassistant.server;
+package com.studyassistant.server.client;
 
+import com.studyassistant.server.exception.ApiException;
+import com.studyassistant.server.exception.ErrorCode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.http.HttpClient;

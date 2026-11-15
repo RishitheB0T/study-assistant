@@ -1,4 +1,4 @@
-package com.studyassistant.server;
+package com.studyassistant.server.client;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;

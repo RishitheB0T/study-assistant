@@ -1,4 +1,4 @@
-package com.studyassistant.server;
+package com.studyassistant.server.exception;
 
 import org.springframework.http.HttpStatus;
 

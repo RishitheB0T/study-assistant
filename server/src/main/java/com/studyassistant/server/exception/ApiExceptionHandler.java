@@ -1,5 +1,6 @@
-package com.studyassistant.server;
+package com.studyassistant.server.exception;
 
+import com.studyassistant.server.dto.ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;

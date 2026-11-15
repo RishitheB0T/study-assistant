@@ -1,4 +1,4 @@
-package com.studyassistant.server;
+package com.studyassistant.server.exception;
 
 /** A failure we expected and can describe to the user. ApiExceptionHandler turns it into JSON. */
 public class ApiException extends RuntimeException {

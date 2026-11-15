@@ -1,5 +1,8 @@
-package com.studyassistant.server;
+package com.studyassistant.server.controller;
 
+import com.studyassistant.server.client.GeminiClient;
+import com.studyassistant.server.dto.GenerateRequest;
+import com.studyassistant.server.dto.GenerateResponse;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

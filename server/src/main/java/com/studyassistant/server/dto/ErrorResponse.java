@@ -1,4 +1,6 @@
-package com.studyassistant.server;
+package com.studyassistant.server.dto;
+
+import com.studyassistant.server.exception.ErrorCode;
 
 /** Failure reply: { "ok": false, "error": { "code": "TIMEOUT", "message": "..." } }. */
 public record ErrorResponse(boolean ok, Details error) {
