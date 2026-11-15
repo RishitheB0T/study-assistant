@@ -280,7 +280,7 @@ where an old answer arrives last.
 
 **Still shaky:** —
 
-## Step 1.5 — Debug switch   (2026-11-15)
+## Step 1.5 — Debug switch   (2026-11-15, about 45 minutes)
 
 **What we built:** `?chaos=<mode>` on the server (`StudySetService` decides:
 Gemini, or a fake reply from `ChaosReplies`) and a debug panel in the app,
