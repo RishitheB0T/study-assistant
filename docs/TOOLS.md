@@ -34,7 +34,7 @@ the open page the moment a file is saved.
 The React plugin, switched on in `vite.config.js`, turns JSX into plain
 JavaScript and adds Fast Refresh (only the changed component updates, and what
 is on screen is kept). Its dev-server proxy forwards every `/api/...` request
-to the Spring Boot server on port 8787, so the browser only ever talks to one
+to the local API server on port 8787, so the browser only ever talks to one
 address and there are no CORS problems.
 
 **Without it we would:** set up a bundler such as webpack and a JSX compiler
@@ -102,35 +102,95 @@ an answer, no skipping) inside each button's click handler.
 rules live in one place and I can test them without rendering anything. The
 screen just dispatches actions like 'answer' or 'next'."
 
-## Spring Boot (the API server)
+## Vercel Functions (the live API)
 
-**What it is:** a Java framework that turns a few annotated classes into a
-running web server with JSON, validation and logging already set up.
+**What it is:** Vercel hosts the built frontend and turns every file in the
+`api/` folder into a small server function that runs on demand.
 
 **Problem it solves:** the AI key must never reach the browser, so something
-outside the browser has to hold it and call the AI. Spring Boot does that with
-very little code, and in a language I already know well.
+outside the browser has to hold it and call the AI. A function needs no server
+of our own to keep running, and it deploys together with the frontend.
 
-**How we use it here:** one endpoint, `POST /api/generate`. `@Valid` rejects
-bad notes, `GeminiClient` calls Gemini with Spring's `RestClient` (20-second
-timeout), and `@RestControllerAdvice` turns every failure into
-`{ ok: false, error: { code, message } }`. `npm start` runs it through the
-Maven wrapper, so nobody needs Maven installed.
+**How we use it here:** `api/generate.js` answers `POST /api/generate`. It
+reads the body and `?chaos=`, then calls `generateStudySet` in
+`server/studySet.js`, which holds all the rules. The key is set in Vercel's
+Environment Variables as `GEMINI_API_KEY`. `vercel.json` allows the function
+30 seconds (our own Gemini limit is 20).
 
-**Without it we would:** use a small Node server such as Express, or call the
-AI from the browser and expose the key.
+**Without it we would:** rent and run a server ourselves (as the earlier Spring
+Boot version needed), or call the AI from the browser and expose the key.
 
-**Interview answer:** "The server exists to keep the key secret and to turn
-every failure into one predictable JSON shape. It never checks the study set
-itself: that is the frontend checkpoint's job."
+**Interview answer:** "The server is one function that keeps the key secret and
+turns every failure into one predictable JSON shape. On Vercel it runs as a
+Vercel Function; locally a tiny Node server calls the same function."
+
+## Node's http module and process.loadEnvFile (the local API server)
+
+**What it is:** `node:http` is Node's built-in way to write a web server;
+`process.loadEnvFile` is Node's built-in reader for `.env` files.
+
+**Problem it solves:** `npm start` needs a local API server, without adding
+Express or dotenv as dependencies.
+
+**How we use it here:** `server/dev-server.js` serves only `POST
+/api/generate` on port 8787 (or `API_PORT`), reads the body, and calls the same
+`generateStudySet` as the Vercel Function. It loads `.env` if it exists and
+still starts without it, so Generate then answers `NO_KEY`.
+
+**Without it we would:** add Express and dotenv, or need the Vercel CLI to run
+the app locally.
+
+**Interview answer:** "Locally, a 50-line server on Node's http module calls
+the exact function that runs on Vercel, so what I test on my laptop is what
+runs live."
+
+## Vitest stubs and fake timers (vi)
+
+**What it is:** Vitest's helper object `vi` can replace real things during a
+test: `vi.stubGlobal('fetch', …)`, `vi.stubEnv('GEMINI_API_KEY', …)`, and
+`vi.useFakeTimers()` to control `setTimeout`.
+
+**Problem it solves:** server tests must not call the real Gemini (slow, costs
+quota, unpredictable), and the "slow" debug mode would make a test wait 8
+seconds.
+
+**How we use it here:** `server/studySet.test.js` stubs `fetch` to return fake
+Gemini replies (good, 429, 400, 503, blocked, timeout, no network) and jumps 8
+seconds ahead with `vi.advanceTimersByTimeAsync`. Everything is undone after
+each test.
+
+**Without it we would:** test against the real Gemini, slowly and unreliably,
+or not test the failure paths at all.
+
+**Interview answer:** "I replace fetch with a stub, so each test decides exactly
+what Gemini answers. That is how I test 429, 503 and timeouts on demand."
+
+## Browser automation for the recording (Playwright)
+
+**What it is:** Playwright (here the Patchright fork already installed on this
+machine) drives a real Chromium browser from a script: typing, clicking,
+screenshots and video.
+
+**Problem it solves:** a repeatable demo video and screenshots, and visual
+checks of every screen at phone and wide sizes, in light and dark.
+
+**How we use it here:** a one-off script (not in the repo) ran the two-minute
+tour against the real app, recorded `docs/media/demo.webm` and took the four
+screenshots. Takes with an unintended Gemini error were thrown away.
+
+**Without it we would:** record by hand with a screen recorder.
+
+**Interview answer:** "The recording is scripted: a browser script runs the
+tour with real Gemini answers and the debug modes, and adds captions, because
+there is no narration."
 
 ## concurrently
 
 **What it is:** a small npm tool that runs several commands at once in one
 terminal and labels each line with where it came from.
 
-**Problem it solves:** the app needs two programs running (Vite and Spring
-Boot). Without it, everyone would need two terminals and two commands.
+**Problem it solves:** the app needs two programs running (Vite and the local
+API server). Without it, everyone would need two terminals and two commands.
 
 **How we use it here:** `npm start` runs `concurrently "npm:dev" "npm:server"`.
 Output lines are prefixed `[web]` and `[api]`, and Ctrl+C stops both.
@@ -139,7 +199,7 @@ Output lines are prefixed `[web]` and `[api]`, and Ctrl+C stops both.
 script that only works on one operating system.
 
 **Interview answer:** "`npm start` uses concurrently to start the Vite dev
-server and the Spring Boot server side by side, so `npm install && npm start`
+server and the local API server side by side, so `npm install && npm start`
 really does run the whole app."
 
 ## Gemini API (structured output)
@@ -151,7 +211,7 @@ questions, which is the part of the app that needs an AI.
 
 **How we use it here:** `POST .../models/gemini-3.5-flash-lite:generateContent`
 with the key in the `x-goog-api-key` header. `generationConfig` asks for
-`application/json` and sends `study-set-schema.json` as `responseJsonSchema`,
+`application/json` and sends `STUDY_SET_SCHEMA` (in `server/studySet.js`) as `responseJsonSchema`,
 so the answer comes back in our exact `{ title, items }` shape. The model's
 "thought" parts are skipped.
 

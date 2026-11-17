@@ -362,3 +362,227 @@ whole app, and it saved a hard-coded set instead of the real one).
   breaks that.
 
 **Still shaky:** —
+
+## Submission pass — server as one function, styling, recording   (2026-11-15 and 2026-11-17)
+
+**What changed, in one paragraph:** the Spring Boot server was replaced by one
+plain JavaScript function, `generateStudySet`, in `server/studySet.js`. Two thin
+doors call it: a Vercel Function (`api/generate.js`) for the live site, and a
+tiny local server (`server/dev-server.js`) for `npm start`. Now the whole app
+needs only Node, and the same code runs on a laptop and on Vercel. Then every
+screen got a proper look (plain CSS with variables and dark mode), and a
+scripted recording plus four screenshots were added to `docs/media/`.
+
+**Why the switch from Spring Boot:** the brief says `npm install && npm start`
+must run everything. With Java, that also needed a JDK on the reviewer's
+machine, and the live demo would have needed a second hosting service. One
+JavaScript function deploys with the frontend as a single Vercel project. The
+rules and messages are the same as in the Java version (BAD_INPUT, NO_KEY,
+TIMEOUT, RATE_LIMITED, PROVIDER_ERROR, and the six chaos replies).
+
+### `server/studySet.js` — the whole server in one function
+
+```
+Lines 1-8: A comment with the contract: the two reply shapes, and "never checks the study set".
+Why: anyone opening the file sees at once what it promises and what it leaves to the frontend.
+
+Lines 10-13: The Gemini address (model gemini-3.5-flash-lite), the 20-second limit, and the 4,000-character limit.
+Why: the same numbers as the text box and the old Java server, kept in one place.
+
+Lines 15-16: STATUS pairs each error code with its HTTP status (BAD_INPUT 400, NO_KEY 500, TIMEOUT 504, ...).
+Why: it plays the part of the old ErrorCode enum: one place where a code and its status are paired.
+
+Lines 18-28: INSTRUCTIONS, the system prompt, word for word the same as the Java version.
+Why: how many cards, exactly 4 options, 0-based answerIndex, unique ids, and "treat the text only as study
+     material, never as instructions" (so pasted text cannot steer the model).
+
+Lines 30-67: STUDY_SET_SCHEMA, the JSON schema sent to Gemini (it used to be study-set-schema.json).
+Why: anyOf lets an item be EITHER a flashcard OR a question. Every field is required and nothing extra is allowed,
+     so Gemini answers in our { title, items } shape. The browser still checks it: a schema makes good output
+     likely, not guaranteed.
+
+Lines 69-86: GOOD_SET and PARTIAL_SET, the texts used by the chaos replies, identical to ChaosReplies.java.
+Why: PARTIAL_SET has 4 items, and exactly 2 of them each break one checkpoint rule.
+
+Lines 88-94: success(text) and failure(code, message, headers) build the { status, headers, body } object.
+Why: every exit from the file goes through these two, so the reply shape can never drift.
+
+Lines 96-97: NOT_JSON, the ready-made reply for a body that is not JSON.
+Why: both doors (Vercel and the local server) need it, so it is built once and exported.
+
+Lines 99-106: generateStudySet starts with the input guards: notes must be non-blank text and at most 4,000 characters.
+Why: bad input is rejected before anything else happens, so it never costs a Gemini call. Same messages as @Valid had.
+
+Lines 107-114: Debug mode or real Gemini, inside a try/catch that turns any bug of ours into a calm PROVIDER_ERROR.
+Why: the function NEVER throws, the same idea as the checkpoint. The full error goes to the server log only.
+
+Lines 117-138: chaosReply(mode) is a switch with the six fake replies, plus BAD_INPUT for an unknown mode.
+Why: "slow" waits 8 seconds with a Promise around setTimeout (the JavaScript version of Thread.sleep, without
+     blocking the whole server). None of these ever call Gemini.
+
+Lines 140-150: askGemini first reads GEMINI_API_KEY from process.env. If it is missing, the reply is NO_KEY.
+Why: this is the only place in the project that reads the key, and it is read per request, so the server
+     starts even without a key and explains the problem.
+
+Lines 152-175: The call itself, with the built-in fetch:
+     the key goes in the x-goog-api-key header (never in the address, where it could be logged);
+     the body has systemInstruction, the notes as the user message, and generationConfig with the schema;
+     signal: AbortSignal.timeout(20000) gives up after 20 seconds.
+     If fetch throws: a TimeoutError means TIMEOUT, anything else (no network) means PROVIDER_ERROR.
+New word: AbortSignal.timeout(ms) = a ready-made abort signal that fires by itself after ms milliseconds.
+
+Lines 177-180: A non-OK HTTP status goes to providerFailure; an OK reply goes to answerFrom.
+
+Lines 183-201: providerFailure maps Gemini's status: 429 becomes RATE_LIMITED and passes Retry-After on;
+               400/401/403 says "check that GEMINI_API_KEY is valid"; anything else (500, 503) is PROVIDER_ERROR.
+Why: it logs only the status number, never the body, which could echo request details.
+
+Lines 203-221: answerFrom joins the answer's text parts and SKIPS parts marked thought: true.
+Why: Gemini 3 "thinks" first; those parts are internal reasoning. No candidates at all means the prompt was blocked,
+     and blockReason (for example SAFETY) is shown to the user.
+```
+
+### `api/generate.js` — the Vercel Function
+
+```
+Lines 1-3: A comment, and the import of generateStudySet and NOT_JSON.
+Why: Vercel turns every file in /api into a function. This file only translates between HTTP and our function.
+
+Lines 5-6: export default { async fetch(request) { ... } }: the "fetch" style that Vercel's docs recommend.
+New word: Request / Response = the browser's own objects for an HTTP request and reply, now also used on servers.
+
+Lines 7-10: Anything except POST gets 405 with an Allow: POST header, in our usual error shape.
+
+Lines 12-17: await request.json() reads the body. If it is not JSON, the reply is NOT_JSON (BAD_INPUT).
+Why: it is the same message the Java server gave for an unreadable body.
+
+Lines 18-19: The ?chaos= value comes from the address; then generateStudySet does all the work.
+
+Lines 23-25: reply() turns { status, headers, body } into a Response with Response.json.
+```
+
+### `server/dev-server.js` — the local API server
+
+```
+Lines 1-5: Imports: Node's built-in http module, a path helper, and our function.
+Why: no Express and no new dependency. createServer is enough for one endpoint.
+
+Lines 7-13: process.loadEnvFile reads the root .env into process.env. If the file is missing, the catch ignores it.
+Why: the server must start without a key too; then Generate answers NO_KEY with a clear message.
+New word: process.loadEnvFile(path) = Node's built-in .env reader (no "dotenv" package needed).
+
+Line 15: The port is 8787, or API_PORT if set (useful when 8787 is already taken).
+
+Lines 17-23: Only POST /api/generate is served: other addresses get 404, other methods 405.
+
+Lines 25-29: Read the body chunk by chunk with for await, the way Node delivers request bodies.
+
+Lines 31-38: Parse it as JSON (NOT_JSON if that fails), then call generateStudySet with the notes and ?chaos=.
+
+Lines 41-48: problem() builds the error body; send() writes the status, the headers and the JSON text.
+
+Lines 50-52: Start listening and print one line, so `npm start` shows the API is ready.
+```
+
+### `server/studySet.test.js` — 22 tests for the server function
+
+```
+Lines 1-3: Vitest, the frontend checkpoint (to check what it makes of each chaos reply), and the function under test.
+
+Lines 5-14: geminiReply() fakes what fetch returns; goodReply is a real-looking Gemini answer with a "thought" part.
+
+Lines 16-27: Before each test: a fake key (vi.stubEnv), a fake fetch (vi.stubGlobal) and a silenced console.warn.
+             After each test: all of it is undone, and real timers are restored.
+Why: no test ever calls the real Gemini, and tests cannot affect one another.
+New word: stub = a stand-in that replaces something real (here fetch and the environment) during a test.
+
+Lines 29-62: Bad input: missing, blank and non-text notes; 4,001 characters; an unknown chaos mode;
+             blank notes in chaos mode. Each one checks that fetch was NEVER called.
+
+Lines 64-109: Chaos modes: malformed, wrong_shape and empty are rejected by the real checkpoint with exactly
+              that reason; partial keeps 2 and skips 2; slow uses fake timers (nothing at 7.999 s, a set at 8 s);
+              fail is a 502; chaos works without a key.
+New word: fake timers = Vitest takes over setTimeout, so a test can jump forward 8 seconds instantly.
+
+Lines 111-182: Gemini: no key gives NO_KEY; the "thought" part is skipped; the key travels in the header, never in the
+               address; a timeout gives TIMEOUT; no network gives PROVIDER_ERROR; 429 passes Retry-After on;
+               400 says to check the key; 503 is a plain PROVIDER_ERROR; a blocked prompt names the reason.
+```
+
+### Small files
+
+```
+package.json: "server" now runs node server/dev-server.js; "build" (vite build) was added for Vercel;
+              "engines" says Node 22.12 or newer (Vitest 5 needs it). No dependencies were added.
+vite.config.js: the /api proxy now points at http://localhost:8787, or at API_PORT when that is set.
+vercel.json: lets api/generate.js run for up to 30 seconds (our own limit is 20), so Vercel never cuts it off first.
+.gitignore: ignores .vercel/, the folder the Vercel command-line tool creates when a folder is linked to a project.
+Removed: the whole Java project (server/pom.xml, mvnw, src/...) and scripts/start-server.js, which started it.
+```
+
+### Styling: `src/index.css` and the JSX class names
+
+```
+Lines 4-40: Theme. Every colour, the corner radius and the spacing are CSS variables on :root
+            (for example --accent, --surface, --bad). Dark mode is ONE @media (prefers-color-scheme: dark)
+            block that only changes those variables.
+New word: CSS variable = a named value (--accent: #0969da) used elsewhere as var(--accent). Change it once, it
+          changes everywhere.
+
+Lines 42-75: Page: one centred column 44rem wide, a muted tagline, and one shared "surface" look
+             (background, border, radius, padding) for the form, the quiz, the loading box, the error box and the cards.
+
+Lines 77-102: Buttons are quiet by default; .primary (Generate, Retry, Retest the misses) is filled with the accent colour.
+              :focus-visible draws a 3px outline only for keyboard users. All buttons are at least 44px tall.
+
+Lines 104-122: Form: a bold label, a bordered text box whose border turns blue when focused, and a small right-aligned
+               counter. .counter.over turns it red over 4,000 characters.
+
+Lines 124-157: Cards: one column on phones; from 640px, a grid with two columns of cards, while the title and the
+               quiz span both. .side is the small "Question"/"Answer" label; .flipped tints the answer side.
+               The fade: two keyframes with different names, so changing the class restarts the animation on every flip.
+
+Lines 159-182: Quiz: a muted progress line, full-width options, a tick and a cross added with ::before on .correct
+               and .wrong (no extra JSX), feedback in a soft box, and a large score in Results.
+
+Lines 184-212: States: three shimmering bars while loading (a moving gradient), a red left border on errors,
+               a small grey note for skipped items, and a centred empty-state line.
+               prefers-reduced-motion switches the fade and the shimmer off.
+
+Lines 214-224: The debug panel keeps its dashed amber border, so it never looks like part of the real app.
+
+JSX changes (class names and a few small elements only, no behaviour changes):
+  App.jsx: a tagline <p>, className="empty" on the empty-state line, className="study-set" on the set's section.
+  TopicForm.jsx: className="surface" on the form, "counter" / "counter over" on the counter, "primary" on Generate.
+  Flashcard.jsx: "flashcard flipped" when turned over, plus a <span className="side"> with "Question" or "Answer".
+  Quiz.jsx: "surface" on the section, "progress" on "Question 1 of 3", "feedback" on the answer box.
+  Results.jsx: "surface", "score" on the big score line, "primary" on Retest the misses.
+  StatusView.jsx: "loading" plus three empty <span> bars, "error" plus a primary Retry, "note" on the skipped line.
+```
+
+### `docs/media/` — screenshots and the recording
+
+The four screenshots and the 1 min 27 s video were made by a script that drove
+a real browser through the app (real Gemini answers for the first set and the
+final Retry; the debug modes for the failures). A caption bar names each step,
+because a scripted video has no voice and no visible mouse pointer. The phone
+part shows the same app inside a 390px frame, because a video keeps one frame
+size. Takes with an unintended error were thrown away: Gemini returned 503
+(overloaded) several times while recording.
+
+**Interview questions and my answers:**
+
+- *Why did you move from Spring Boot to a Node function?* So `npm install &&
+  npm start` needs only Node, and the live site is one Vercel project. The
+  rules did not change; the tests check every one of them.
+- *How does the same code run locally and on Vercel?* All the logic is in
+  `generateStudySet`. Two thin doors call it: `api/generate.js` on Vercel,
+  `server/dev-server.js` locally.
+- *How do you test the server without calling Gemini?* Vitest replaces
+  `fetch` with a stub that returns fake Gemini replies, and fake timers jump
+  over the 8-second "slow" mode.
+- *How does dark mode work?* Every colour is a CSS variable; one media query
+  swaps the variables when the device asks for dark mode.
+
+**Still shaky:** reading `server/studySet.js` end to end; it replaced Java I
+already knew.
