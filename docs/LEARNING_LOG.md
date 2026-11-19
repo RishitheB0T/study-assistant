@@ -586,3 +586,17 @@ size. Takes with an unintended error were thrown away: Gemini returned 503
 
 **Still shaky:** reading `server/studySet.js` end to end; it replaced Java I
 already knew.
+
+### Going live (2026-11-19)
+
+The app is live at https://study-assistant-rho-ten.vercel.app. Checked there:
+the page, every debug mode, "Still working…" with Cancel, the saved set after a
+refresh, and the phone width. One lesson: `.env` never leaves my machine (it is
+git-ignored), so Vercel cannot see it; the live key has to be set in the Vercel
+project's Environment Variables, and only new deployments pick it up.
+
+```
+server/studySet.js, the NO_KEY message: it now names both places for the key, the .env file
+(local) and the Vercel project's Environment Variables (live), and says to restart or redeploy.
+Why: the old message only mentioned .env, which is misleading on the live site.
+```

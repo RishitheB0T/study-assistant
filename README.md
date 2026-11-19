@@ -6,7 +6,7 @@ wrong. An AI model writes the study material as structured JSON; the app checks
 every item before anything reaches the screen. It is not a chatbot: raw model
 text is never shown.
 
-**Live demo:** LIVE_DEMO_URL
+**Live demo:** https://study-assistant-rho-ten.vercel.app (add `?debug=1` to the address to try the bad-output modes)
 
 **Recording:** [watch the 90-second demo](docs/media/demo.webm) (a scripted
 walkthrough with real Gemini answers; see "How this was built" below)
@@ -146,7 +146,7 @@ itself; the browser's checkpoint does.
 
 ### Debug mode: showing it on demand
 
-Open http://localhost:5173/?debug=1 (or the live URL with `?debug=1`). A dashed
+Open http://localhost:5173/?debug=1 (or https://study-assistant-rho-ten.vercel.app/?debug=1). A dashed
 "Debug" panel appears above the text box. Pick a mode and press Generate: the
 server returns a fake reply instead of calling Gemini (so it costs nothing),
 and the app has to handle it like a real one.
