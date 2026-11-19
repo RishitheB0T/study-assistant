@@ -143,7 +143,8 @@ async function askGemini(notes) {
   if (!apiKey || apiKey.trim() === '') {
     return failure(
       'NO_KEY',
-      'The server has no Gemini API key. Add GEMINI_API_KEY to the .env file and restart.',
+      'The server has no Gemini API key. Set GEMINI_API_KEY in the .env file (local) or in the ' +
+        "Vercel project's Environment Variables (live), then restart or redeploy.",
     )
   }
 
