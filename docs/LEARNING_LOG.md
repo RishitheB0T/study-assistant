@@ -600,3 +600,36 @@ server/studySet.js, the NO_KEY message: it now names both places for the key, th
 (local) and the Vercel project's Environment Variables (live), and says to restart or redeploy.
 Why: the old message only mentioned .env, which is misleading on the live site.
 ```
+
+### Polish: placeholders, small CSS touches, a tab icon (2026-11-20)
+
+**What changed:** example text in the empty text box, a "what you will get"
+preview before the first request, a few small style touches, and a tab icon.
+No behaviour changed.
+
+```
+src/components/TopicForm.jsx: placeholder="Paste a paragraph of your notes, or type a topic ..."
+Why: an empty box gives no hint what to type. A placeholder is grey example text that disappears as soon as you type.
+
+src/App.jsx, the empty state: a sentence plus an <ol className="preview"> with three items
+(Flashcards, A quiz, A re-test).
+Why: before the first request the user sees what the app will give them, instead of one plain line.
+
+src/index.css:
+  --shadow (light and dark values) + box-shadow on every surface: the boxes float slightly off the page.
+  h1 2rem with letter-spacing -0.02em; the tagline gets 0.25rem of room: a stronger title.
+  button transition (0.15s) and .primary:hover brightness(1.1): buttons change smoothly when hovered.
+  textarea::placeholder in the muted colour; textarea:focus adds a soft blue ring (box-shadow 3px var(--tint)).
+  .flashcard:hover:not(:disabled), .options button:hover:not(:disabled): the accent border under the mouse.
+     Why ":not(:disabled)": it makes the selector more specific than the general button:hover rule, which
+     otherwise wins and keeps the border grey (seen in a screenshot and fixed).
+  .empty / .preview: three dashed tiles, stacked on phones and in three columns from 640px.
+  prefers-reduced-motion also turns the button transitions off.
+New word: specificity = how CSS picks between two rules for the same thing; more classes and
+pseudo-classes in a selector win.
+
+index.html:
+  <meta name="description">: the one-line summary search results and link previews show.
+  <link rel="icon" href="data:image/svg+xml,..."> draws a 📚 icon inline, so the browser stops asking for
+  /favicon.ico. That removed the last console error (it had been on the Later list since step 1.0).
+```

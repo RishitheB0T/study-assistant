@@ -26,8 +26,9 @@ walkthrough with real Gemini answers; see "How this was built" below)
   tick and a wrong pick a cross, an explanation follows, and Enter moves on.
 - **Results** with the score, and **"Retest the misses"** to start a new round
   with only the questions answered wrong.
-- **Every state has a screen:** an empty state before anything is generated,
-  loading (with "Still working…" after 5 seconds and Cancel), errors (a clear
+- **Every state has a screen:** before anything is generated, example text in
+  the text box and a preview of what you will get (flashcards, a quiz, a
+  re-test); loading (with "Still working…" after 5 seconds and Cancel), errors (a clear
   message and Retry), and a note when broken items were skipped.
 - **The last set is saved** in the browser and comes back after a refresh.
 - **Works on phones and in dark mode:** one column on phones, two columns of
@@ -203,7 +204,6 @@ client: `POST /api/generate?chaos=malformed`.
 - Dark mode follows the device setting; there is no switch in the app.
 - The phone layout was checked in phone-sized browser windows (320 to 390
   pixels wide), not on real devices.
-- There is no favicon, so the browser logs a harmless 404 for `/favicon.ico`.
 
 ## What I would do next
 
