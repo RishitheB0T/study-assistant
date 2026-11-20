@@ -32,8 +32,9 @@ walkthrough with real Gemini answers; see "How this was built" below)
   message and Retry), and a note when broken items were skipped.
 - **The last set is saved** in the browser and comes back after a refresh.
 - **Works on phones and in dark mode:** one column on phones, two columns of
-  cards on wider screens, 44px touch targets, colours that follow the system's
-  light or dark setting, and no animations for people who ask for reduced motion.
+  cards on wider screens, 44px touch targets, a light/dark switch (it starts
+  with the device's setting and remembers your choice), and no animations for
+  people who ask for reduced motion.
 
 ## How it works
 
@@ -66,7 +67,7 @@ exactly the same code.
 
 ```
 src/App.jsx                    The page: holds the current set and shows the parts below
-src/components/                TopicForm, Flashcard, Quiz, Results, StatusView, DebugPanel
+src/components/                TopicForm, Flashcard, Quiz, Results, StatusView, DebugPanel, ThemeToggle
 src/hooks/useStudySet.js       One request at a time: status word, Cancel, Retry, stale-answer guard
 src/hooks/useQuiz.js           The quiz rules in one reducer (answer, next, re-test the misses)
 src/lib/api.js                 The only fetch call; always returns { ok, ... }
@@ -188,8 +189,10 @@ client: `POST /api/generate?chaos=malformed`.
   nothing hidden to explain.
 - **Debug failures are produced on the server,** as text, so the real
   checkpoint and error paths are exercised rather than faked in the browser.
-- **Plain CSS with variables.** Dark mode is one media query that swaps the
-  variables; there is no CSS framework to learn or explain.
+- **Plain CSS with variables.** Dark mode is one block that swaps the
+  variables when `<html data-theme="dark">`; a tiny script in `index.html` sets
+  it before the page draws, so there is no flash of the wrong colours. There is
+  no CSS framework to learn or explain.
 
 ## Known limitations
 
@@ -201,7 +204,6 @@ client: `POST /api/generate?chaos=malformed`.
   never call Gemini, but `slow` keeps a function busy for 8 seconds.
 - Only the last set is saved, not the quiz progress: after a refresh the quiz
   starts again from question 1.
-- Dark mode follows the device setting; there is no switch in the app.
 - The phone layout was checked in phone-sized browser windows (320 to 390
   pixels wide), not on real devices.
 

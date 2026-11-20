@@ -633,3 +633,38 @@ index.html:
   <link rel="icon" href="data:image/svg+xml,..."> draws a 📚 icon inline, so the browser stops asking for
   /favicon.ico. That removed the last console error (it had been on the Later list since step 1.0).
 ```
+
+### A light/dark switch (2026-11-20)
+
+**What changed:** a "🌙 Dark" / "☀️ Light" button beside the title. It starts
+with the device's own setting, flips on click, and remembers the choice.
+
+```
+index.html, the small <script> in <head>:
+  It reads a saved choice from localStorage ('study-assistant:theme'); if there is none, it asks the device
+  with matchMedia('(prefers-color-scheme: dark)'). It writes the answer onto <html data-theme="...">.
+Why: it runs BEFORE React and before the page is drawn, so a dark-mode user never sees a white flash first.
+     The try/catch keeps it working when storage is blocked.
+New word: matchMedia(query) = asks the browser whether a CSS media query is true right now.
+
+src/components/ThemeToggle.jsx:
+  Lines 4-6: theme starts as whatever index.html chose; next is the opposite one.
+  Lines 8-16: handleClick writes next onto <html data-theme>, saves it in localStorage (inside try/catch),
+              and updates the state so the button's label changes.
+  Lines 18-22: the button shows "☀️ Light" in dark mode and "🌙 Dark" in light mode; aria-label tells
+               screen readers what pressing it will do ("Switch to light mode").
+Why change <html> directly instead of passing state around: the colours live in CSS variables on :root,
+     so one attribute on <html> re-colours the whole page. No other component needs to know the theme.
+
+src/App.jsx: the title and the switch sit together in <div className="top">.
+
+src/index.css:
+  :root has color-scheme: light; the dark variables moved from @media (prefers-color-scheme: dark) to
+  :root[data-theme='dark'] (with color-scheme: dark, so scrollbars and the text box follow too).
+  .top is a flex row: title left, switch right. The title is 1.5rem on narrow phones and 2rem from 480px,
+  so both fit on one line at 320px.
+```
+
+**Interview question:** *Why is the theme set in a script in index.html and not
+only in React?* React runs after the page first draws. Setting the attribute
+before that avoids a flash of the wrong colours on every load.
