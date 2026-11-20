@@ -7,6 +7,14 @@
     <!-- A tab icon drawn inline, so the browser stops asking for a missing /favicon.ico. -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
     <title>Study Assistant</title>
+    <script>
+      // Pick light or dark before the page is drawn, so it never flashes the wrong colours:
+      // the saved choice from the switch if there is one, otherwise the device setting.
+      let theme = null
+      try { theme = localStorage.getItem('study-assistant:theme') } catch {}
+      document.documentElement.dataset.theme =
+        theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    </script>
   </head>
   <body>
     <div id="root"></div>

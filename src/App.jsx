@@ -3,6 +3,7 @@ import DebugPanel from './components/DebugPanel.jsx'
 import Flashcard from './components/Flashcard.jsx'
 import Quiz from './components/Quiz.jsx'
 import StatusView from './components/StatusView.jsx'
+import ThemeToggle from './components/ThemeToggle.jsx'
 import TopicForm from './components/TopicForm.jsx'
 import { useStudySet } from './hooks/useStudySet.js'
 
@@ -21,7 +22,10 @@ function App() {
 
   return (
     <main>
-      <h1>Study Assistant</h1>
+      <div className="top">
+        <h1>Study Assistant</h1>
+        <ThemeToggle />
+      </div>
       <p className="tagline">Turn your notes into flashcards and a quiz.</p>
       {isDebug ? <DebugPanel mode={chaos} onChange={setChaos} /> : null}
       <TopicForm onGenerate={generate} isBusy={status === 'loading'} />

@@ -3,7 +3,7 @@
 
 /* 1. Theme: every colour, the corner radius and the spacing live here. */
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --bg: #f6f8fa;
   --surface: #ffffff;
   --text: #1f2328;
@@ -22,23 +22,23 @@
   --space: 1rem;
 }
 
-/* Dark mode only swaps the variables; no other rule changes. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --text: #e6edf3;
-    --muted: #9198a1;
-    --border: #3d444d;
-    --accent: #1f6feb;
-    --tint: #10243e;
-    --good: #3fb950;
-    --good-bg: #12261e;
-    --bad: #f85149;
-    --bad-bg: #2d1316;
-    --warn: #d29922;
-    --shadow: 0 1px 3px rgb(0 0 0 / 0.4);
-  }
+/* Dark mode only swaps the variables; no other rule changes.
+   data-theme on <html> is set by index.html (device setting or saved choice) and by the switch. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0d1117;
+  --surface: #161b22;
+  --text: #e6edf3;
+  --muted: #9198a1;
+  --border: #3d444d;
+  --accent: #1f6feb;
+  --tint: #10243e;
+  --good: #3fb950;
+  --good-bg: #12261e;
+  --bad: #f85149;
+  --bad-bg: #2d1316;
+  --warn: #d29922;
+  --shadow: 0 1px 3px rgb(0 0 0 / 0.4);
 }
 
 /* 2. Page: one centred column. */
@@ -62,7 +62,16 @@ main {
   overflow-wrap: anywhere;
 }
 
-h1 { margin: 0.5rem 0 0; font-size: 2rem; letter-spacing: -0.02em; }
+h1 { margin: 0.5rem 0 0; font-size: 1.5rem; letter-spacing: -0.02em; }
+
+/* Smaller on narrow phones so the title and the switch share one line; full size from 480px. */
+@media (min-width: 480px) {
+  h1 { font-size: 2rem; }
+}
+
+/* The title on the left, the light/dark switch on the right. */
+.top { display: flex; align-items: center; justify-content: space-between; gap: var(--space); }
+.theme-toggle { flex-shrink: 0; white-space: nowrap; }
 h2 { margin: 0; font-size: 1.25rem; }
 h3 { margin: 0 0 var(--space); font-size: 1.125rem; }
 .tagline { margin: 0.25rem 0 0; color: var(--muted); }
