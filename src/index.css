@@ -17,6 +17,7 @@
   --bad: #cf222e;
   --bad-bg: #ffebe9;
   --warn: #bf8700;
+  --shadow: 0 1px 3px rgb(0 0 0 / 0.08);
   --radius: 0.625rem;
   --space: 1rem;
 }
@@ -36,6 +37,7 @@
     --bad: #f85149;
     --bad-bg: #2d1316;
     --warn: #d29922;
+    --shadow: 0 1px 3px rgb(0 0 0 / 0.4);
   }
 }
 
@@ -60,10 +62,10 @@ main {
   overflow-wrap: anywhere;
 }
 
-h1 { margin: 0.5rem 0 0; font-size: 1.75rem; }
+h1 { margin: 0.5rem 0 0; font-size: 2rem; letter-spacing: -0.02em; }
 h2 { margin: 0; font-size: 1.25rem; }
 h3 { margin: 0 0 var(--space); font-size: 1.125rem; }
-.tagline { margin: 0; color: var(--muted); }
+.tagline { margin: 0.25rem 0 0; color: var(--muted); }
 
 /* Each area sits on its own surface. */
 .surface, .loading, .error, .flashcard {
@@ -72,6 +74,7 @@ h3 { margin: 0 0 var(--space); font-size: 1.125rem; }
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 
 /* 3. Buttons: quiet by default, one filled "primary" style for the main action. */
@@ -85,9 +88,11 @@ button {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, filter 0.15s;
 }
 
 button:hover:not(:disabled) { border-color: var(--muted); }
+.primary:hover:not(:disabled) { filter: brightness(1.1); }
 
 .primary {
   font-weight: 600;
@@ -116,7 +121,8 @@ textarea {
   resize: vertical;
 }
 
-textarea:focus { border-color: var(--accent); }
+textarea::placeholder { color: var(--muted); }
+textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--tint); }
 
 .counter { margin: 0.25rem 0 0.75rem; font-size: 0.875rem; color: var(--muted); text-align: right; }
 .counter.over { font-weight: 600; color: var(--bad); }
@@ -141,6 +147,8 @@ textarea:focus { border-color: var(--accent); }
 }
 
 /* The answer side is tinted. A different animation name restarts the fade on every flip. */
+/* :not(:disabled) makes this beat the general button:hover rule above. */
+.flashcard:hover:not(:disabled), .options button:hover:not(:disabled) { border-color: var(--accent); }
 .flashcard.flipped { background: var(--tint); border-color: var(--accent); animation-name: fade-b; }
 
 .side {
@@ -204,11 +212,22 @@ textarea:focus { border-color: var(--accent); }
 
 .error { border-left: 4px solid var(--bad); }
 .note { margin: var(--space) 0 0; }
-.empty { margin: 2.5rem 0 0; text-align: center; color: var(--muted); }
+.empty { margin: 2rem 0 0; text-align: center; color: var(--muted); }
+.empty p { margin: 0 0 var(--space); }
+
+/* Three dashed tiles: "what you will get" before the first request. */
+.preview { display: grid; gap: 0.75rem; margin: 0; padding: 0; list-style: none; text-align: left; }
+.preview li { padding: 0.75rem var(--space); border: 1px dashed var(--border); border-radius: var(--radius); }
+.preview strong { display: block; color: var(--text); }
+
+@media (min-width: 640px) {
+  .preview { grid-template-columns: repeat(3, 1fr); }
+}
 
 /* People who ask for less motion get no fade and no shimmer. */
 @media (prefers-reduced-motion: reduce) {
   .flashcard, .bars span { animation: none; }
+  button { transition: none; }
 }
 
 /* 8. Debug panel (only with ?debug=1): dashed so it never looks like part of the app. */
