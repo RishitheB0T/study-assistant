@@ -20,6 +20,7 @@ function TopicForm({ onGenerate, isBusy }) {
       <textarea
         id="notes"
         rows={8}
+        placeholder="Paste a paragraph of your notes, or type a topic such as “the water cycle”."
         value={text}
         onChange={(event) => setText(event.target.value)}
       />

@@ -33,7 +33,14 @@ function App() {
         onRetry={retry}
       />
       {studySet === null && status === 'idle' ? (
-        <p className="empty">Paste your notes above and press Generate to get flashcards and a quiz.</p>
+        <div className="empty">
+          <p>Paste your notes above and press Generate. You will get:</p>
+          <ol className="preview">
+            <li><strong>Flashcards</strong> to flip between question and answer</li>
+            <li><strong>A quiz</strong> with instant feedback and explanations</li>
+            <li><strong>A re-test</strong> of only the questions you got wrong</li>
+          </ol>
+        </div>
       ) : null}
       {studySet !== null ? (
         // A new key for every new set: React rebuilds the cards and the quiz from scratch.
